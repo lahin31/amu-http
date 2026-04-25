@@ -328,6 +328,9 @@ amu.request<T>(url, config?)
 
 ```bash
 npm run lint
+npm run test
+npm run test:watch
+npm run test:coverage
 npm run build
 npm run dev
 ```

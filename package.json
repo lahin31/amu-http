@@ -21,8 +21,11 @@
     "dev": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --watch --dts --outDir dist",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepublishOnly": "npm run lint && npm run build",
-    "test": "npm run example:get",
+    "test:examples": "npm run example:get",
     "example:get": "npm run build && node examples/get-users.js",
     "example:post": "npm run build && node examples/create-post.js",
     "example:bearer": "npm run build && node examples/bearer-token.js"
@@ -38,6 +41,7 @@
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^1.6.0"
   }
 }
