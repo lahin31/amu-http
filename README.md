@@ -64,6 +64,24 @@ When Axios may still be better:
 - **Direct data access over wrapper objects**
 - **Small surface area over feature bloat**
 
+## 📏 Build Size
+
+Current package output (minified, from `dist/`):
+
+- **ESM** (`dist/index.js`): `3693 B` (~`3.6 KB`)
+- **CJS** (`dist/index.cjs`): `4225 B` (~`4.1 KB`)
+- **ESM gzip**: `1597 B` (~`1.6 KB`)
+- **CJS gzip**: `1833 B` (~`1.8 KB`)
+
+Measure locally:
+
+```bash
+npm run build
+ls -l dist
+gzip -c dist/index.js | wc -c
+gzip -c dist/index.cjs | wc -c
+```
+
 ---
 
 ## 🚀 Usage Examples
