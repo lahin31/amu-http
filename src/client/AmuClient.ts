@@ -1,5 +1,12 @@
 import { AmuConfig, AmuPromise, AmuSchema } from '../types/public.js';
-import { appendQueryParams, createDefaults, getErrorName, AmuDefaults } from '../utils/http.js';
+import {
+  appendQueryParams,
+  createDefaults,
+  AmuDefaults,
+  normalizeRetryPolicy,
+  shouldRetryError,
+  sleep,
+} from '../utils/http.js';
 import { AmuError } from '../errors/AmuError.js';
 import { AmuValidationError } from '../errors/AmuValidationError.js';
 
@@ -40,9 +47,9 @@ export class Amu {
   }
 
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T> {
-    const maxRetries = options.retries ?? this.defaults.retries;
+    const retryPolicy = normalizeRetryPolicy(options.retries ?? this.defaults.retries);
 
-    const execute = async (retriesLeft: number): Promise<Response> => {
+    const execute = async (retriesLeft: number, attempt = 0): Promise<Response> => {
       const config = {
         ...this.defaults,
         ...options,
@@ -69,8 +76,10 @@ export class Amu {
         return response;
       } catch (err: unknown) {
         clearTimeout(timer);
-        if (retriesLeft > 0 && getErrorName(err) !== 'AbortError') {
-          return execute(retriesLeft - 1);
+        if (retriesLeft > 0 && shouldRetryError(err, retryPolicy.retryOn)) {
+          const delayMs = retryPolicy.delay(attempt + 1, err);
+          await sleep(delayMs);
+          return execute(retriesLeft - 1, attempt + 1);
         }
         throw err;
       } finally {
@@ -78,15 +87,15 @@ export class Amu {
       }
     };
 
-    const parsedPromise = execute(maxRetries).then(async (res: Response) => {
+    const parsedPromise = execute(retryPolicy.attempts).then(async (res: Response) => {
       const data = await this.parseResponseBody(res);
       if (!options.schema) return data as T;
       return this.validateWithSchema<T>(options.schema, data);
     }) as AmuPromise<T>;
 
-    parsedPromise.json = async <R = unknown>() => (await execute(maxRetries)).json() as Promise<R>;
-    parsedPromise.text = async () => (await execute(maxRetries)).text();
-    parsedPromise.blob = async () => (await execute(maxRetries)).blob();
+    parsedPromise.json = async <R = unknown>() => (await execute(retryPolicy.attempts)).json() as Promise<R>;
+    parsedPromise.text = async () => (await execute(retryPolicy.attempts)).text();
+    parsedPromise.blob = async () => (await execute(retryPolicy.attempts)).blob();
 
     return parsedPromise;
   }

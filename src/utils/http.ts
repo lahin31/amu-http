@@ -1,10 +1,11 @@
-import { AmuConfig } from '../types/public.js';
+import { AmuConfig, AmuRetryConfig } from '../types/public.js';
+import { AmuError } from '../errors/AmuError.js';
 
 export interface AmuDefaults {
   baseURL: string;
   timeout: number;
   headers: HeadersInit;
-  retries: number;
+  retries: number | AmuRetryConfig;
 }
 
 export function createDefaults(config: AmuConfig): AmuDefaults {
@@ -48,4 +49,49 @@ export function appendQueryParams(
     url += (url.includes('?') ? '&' : '?') + query;
   }
   return url;
+}
+
+export interface NormalizedRetryPolicy {
+  attempts: number;
+  delay: (attempt: number, error: unknown) => number;
+  retryOn: number[];
+}
+
+const DEFAULT_RETRY_STATUS_CODES = [429, 500, 502, 503, 504];
+
+export function normalizeRetryPolicy(
+  retries: AmuConfig['retries'] | undefined
+): NormalizedRetryPolicy {
+  if (typeof retries === 'number') {
+    return {
+      attempts: Math.max(0, retries),
+      delay: () => 0,
+      retryOn: DEFAULT_RETRY_STATUS_CODES,
+    };
+  }
+
+  if (!retries) {
+    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_STATUS_CODES };
+  }
+
+  return {
+    attempts: Math.max(0, retries.attempts),
+    delay:
+      typeof retries.delay === 'function'
+        ? retries.delay
+        : () => (typeof retries.delay === 'number' ? retries.delay : 0),
+    retryOn: retries.retryOn?.length ? retries.retryOn : DEFAULT_RETRY_STATUS_CODES,
+  };
+}
+
+export function shouldRetryError(error: unknown, retryOn: number[]): boolean {
+  if (error instanceof AmuError) {
+    return retryOn.includes(error.status);
+  }
+  return getErrorName(error) !== 'AbortError';
+}
+
+export async function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return;
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }

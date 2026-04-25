@@ -122,6 +122,23 @@ const data = await amu.get('https://api.example.com/stats', {
 });
 ```
 
+Advanced retry policy:
+
+```ts
+const data = await amu.get('https://api.example.com/stats', {
+  retries: {
+    attempts: 3,
+    delay: (attempt) => 2 ** attempt * 100, // 200ms, 400ms, 800ms
+    retryOn: [429, 500, 502, 503, 504],
+  },
+});
+```
+
+Retry behavior:
+- Retries network failures by default (except abort timeouts).
+- Retries `AmuError` responses only when `status` is included in `retryOn`.
+- Supports fixed or computed delay per attempt.
+
 ### 5.1) Error Handling (Non-2xx)
 
 ```ts
@@ -222,7 +239,7 @@ amu.request<T>(url, config?)
 `config` supports:
 - `headers`
 - `timeout` (ms)
-- `retries`
+- `retries` (`number` or `{ attempts, delay, retryOn }`)
 - `params` (query params)
 - `json` (request body)
 - `schema` (response validator: function or object with `parse`)
