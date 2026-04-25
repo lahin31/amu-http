@@ -1,4 +1,4 @@
-import { AmuConfig } from './types.js';
+import { AmuConfig } from '../types/public.js';
 
 export interface AmuDefaults {
   baseURL: string;

@@ -1,5 +1,5 @@
-import { AmuConfig, AmuPromise } from './types.js';
-import { appendQueryParams, createDefaults, getErrorName, AmuDefaults } from './amu-utils.js';
+import { AmuConfig, AmuPromise } from '../types/public.js';
+import { appendQueryParams, createDefaults, getErrorName, AmuDefaults } from '../utils/http.js';
 
 export class Amu {
   public defaults: AmuDefaults;
