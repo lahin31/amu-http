@@ -250,6 +250,8 @@ const req2 = amu.get('https://api.example.com/message');
 const asText = await req2.text();
 ```
 
+The request is executed once. Response readers reuse the same underlying response.
+
 ### 8) Schema Validation (Zod or Custom)
 
 ```ts

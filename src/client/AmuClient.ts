@@ -41,10 +41,11 @@ export class Amu {
     }
   }
 
-  private async parseResponseBody(response: Response): Promise<unknown> {
+  private async parseResponseBody(response: Response, clone = false): Promise<unknown> {
+    const target = clone ? response.clone() : response;
     if (response.status === 204) return null;
-    const contentType = response.headers.get('content-type') || '';
-    return contentType.includes('application/json') ? await response.json() : await response.text();
+    const contentType = target.headers.get('content-type') || '';
+    return contentType.includes('application/json') ? await target.json() : await target.text();
   }
 
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T> {
@@ -93,15 +94,17 @@ export class Amu {
       }
     };
 
-    const parsedPromise = execute(retryPolicy.attempts).then(async (res: Response) => {
-      const data = await this.parseResponseBody(res);
+    const responsePromise = execute(retryPolicy.attempts);
+
+    const parsedPromise = responsePromise.then(async (res: Response) => {
+      const data = await this.parseResponseBody(res, true);
       if (!options.schema) return data as T;
       return this.validateWithSchema<T>(options.schema, data);
     }) as AmuPromise<T>;
 
-    parsedPromise.json = async <R = unknown>() => (await execute(retryPolicy.attempts)).json() as Promise<R>;
-    parsedPromise.text = async () => (await execute(retryPolicy.attempts)).text();
-    parsedPromise.blob = async () => (await execute(retryPolicy.attempts)).blob();
+    parsedPromise.json = async <R = unknown>() => (await responsePromise).clone().json() as Promise<R>;
+    parsedPromise.text = async () => (await responsePromise).clone().text();
+    parsedPromise.blob = async () => (await responsePromise).clone().blob();
 
     return parsedPromise;
   }
