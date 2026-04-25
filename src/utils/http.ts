@@ -55,6 +55,7 @@ export interface NormalizedRetryPolicy {
   attempts: number;
   delay: (attempt: number, error: unknown) => number;
   retryOn: Array<number | 'network-error'>;
+  allowNonIdempotent: boolean;
 }
 
 const DEFAULT_RETRY_TARGETS: Array<number | 'network-error'> = ['network-error'];
@@ -67,11 +68,12 @@ export function normalizeRetryPolicy(
       attempts: Math.max(0, retries),
       delay: () => 0,
       retryOn: DEFAULT_RETRY_TARGETS,
+      allowNonIdempotent: false,
     };
   }
 
   if (!retries) {
-    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_TARGETS };
+    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_TARGETS, allowNonIdempotent: false };
   }
 
   return {
@@ -81,7 +83,16 @@ export function normalizeRetryPolicy(
         ? retries.delay
         : () => (typeof retries.delay === 'number' ? retries.delay : 0),
     retryOn: retries.retryOn?.length ? retries.retryOn : DEFAULT_RETRY_TARGETS,
+    allowNonIdempotent: retries.allowNonIdempotent ?? false,
   };
+}
+
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD']);
+
+export function shouldRetryMethod(method: string | undefined, allowNonIdempotent: boolean): boolean {
+  if (allowNonIdempotent) return true;
+  const normalizedMethod = (method ?? 'GET').toUpperCase();
+  return IDEMPOTENT_METHODS.has(normalizedMethod);
 }
 
 export function shouldRetryError(error: unknown, retryOn: Array<number | 'network-error'>): boolean {

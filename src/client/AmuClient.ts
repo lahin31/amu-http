@@ -5,6 +5,7 @@ import {
   AmuDefaults,
   normalizeRetryPolicy,
   shouldRetryError,
+  shouldRetryMethod,
   sleep,
 } from '../utils/http.js';
 import { AmuError } from '../errors/AmuError.js';
@@ -55,6 +56,7 @@ export class Amu {
         ...options,
         headers: { ...this.defaults.headers, ...options.headers },
       };
+      const requestMethod = (config.method ?? 'GET').toString().toUpperCase();
 
       const url = appendQueryParams(endpoint, this.defaults.baseURL, options.params);
 
@@ -76,7 +78,11 @@ export class Amu {
         return response;
       } catch (err: unknown) {
         clearTimeout(timer);
-        if (retriesLeft > 0 && shouldRetryError(err, retryPolicy.retryOn)) {
+        if (
+          retriesLeft > 0 &&
+          shouldRetryMethod(requestMethod, retryPolicy.allowNonIdempotent) &&
+          shouldRetryError(err, retryPolicy.retryOn)
+        ) {
           const delayMs = retryPolicy.delay(attempt + 1, err);
           await sleep(delayMs);
           return execute(retriesLeft - 1, attempt + 1);

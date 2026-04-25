@@ -11,6 +11,22 @@ Named after **Amayra**, this library is designed to be as clean, fast, and relia
 npm install amu-http
 ```
 
+## ⚡ Aha Moment
+
+```ts
+// Native Fetch
+const res = await fetch('/users');
+if (!res.ok) throw new Error('Request failed');
+const users = await res.json();
+
+// Axios
+const res2 = await axios.get('/users');
+const users2 = res2.data;
+
+// Amu
+const users3 = await amu.get('/users');
+```
+
 ## ✨ Fetch Done Right
 
 Modern teams often avoid raw Fetch because of repeated pain points:
@@ -178,6 +194,8 @@ Retry behavior:
 - Retries network failures only when `'network-error'` is in `retryOn` (enabled by default).
 - Does not retry timeout aborts (`AbortController`) by default.
 - Does not retry HTTP errors unless those status codes are explicitly included in `retryOn`.
+- Retries are applied only to idempotent methods (`GET`, `HEAD`) by default.
+- Non-idempotent methods (`POST`, `PATCH`, `DELETE`, etc.) are not retried unless `allowNonIdempotent: true` is set.
 - Supports fixed or computed delay per attempt.
 
 ### 5.1) Error Handling (Non-2xx)
@@ -280,7 +298,7 @@ amu.request<T>(url, config?)
 `config` supports:
 - `headers`
 - `timeout` (ms)
-- `retries` (`number` or `{ attempts, delay, retryOn }`, where `retryOn` supports status codes and `'network-error'`)
+- `retries` (`number` or `{ attempts, delay, retryOn, allowNonIdempotent }`, where `retryOn` supports status codes and `'network-error'`)
 - `params` (query params)
 - `json` (request body)
 - `schema` (response validator: function or object with `parse`)

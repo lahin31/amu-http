@@ -6,6 +6,7 @@ export interface AmuRetryConfig {
   attempts: number;
   delay?: number | ((attempt: number, error: unknown) => number);
   retryOn?: Array<number | 'network-error'>;
+  allowNonIdempotent?: boolean;
 }
 
 export interface AmuConfig extends RequestInit {
