@@ -67,6 +67,7 @@ When Axios may still be better:
 ## 📏 Build Size
 
 Current package output (minified, from `dist/`):
+Measured on: `2026-04-26`
 
 - **ESM** (`dist/index.js`): `3693 B` (~`3.6 KB`)
 - **CJS** (`dist/index.cjs`): `4225 B` (~`4.1 KB`)
