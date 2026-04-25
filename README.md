@@ -41,6 +41,13 @@ When Axios may still be better:
 * **Legacy runtime support**: If you need older environments that do not have stable Fetch.
 * **Large interceptor-heavy codebases**: Axios has a mature ecosystem around advanced interceptor workflows.
 
+## 🧠 Design Principles
+
+- **Minimal abstraction over Fetch**
+- **Predictable behavior over magic**
+- **Direct data access over wrapper objects**
+- **Small surface area over feature bloat**
+
 ---
 
 ## 🚀 Usage Examples
@@ -74,6 +81,31 @@ import amu from 'amu-http';
 await amu.put('https://api.example.com/users/1', { name: 'Updated Name' });
 await amu.patch('https://api.example.com/users/1', { role: 'admin' });
 await amu.delete('https://api.example.com/users/1');
+```
+
+### 3.1) Query Params
+
+```ts
+import amu from 'amu-http';
+
+const users = await amu.get('https://api.example.com/users', {
+  params: { page: 1, limit: 10 },
+});
+```
+
+You can also pass query params directly in the URL:
+
+```ts
+const users = await amu.get('https://api.example.com/users?page=1&limit=10');
+```
+
+Mixing URL query + `params` also works:
+
+```ts
+await amu.get('https://api.example.com/users?page=1', {
+  params: { limit: 10 },
+});
+// Final URL: /users?page=1&limit=10
 ```
 
 ### 4) Bearer Token / Custom Headers
@@ -122,6 +154,14 @@ const data = await amu.get('https://api.example.com/stats', {
 });
 ```
 
+Safe default retries (network failures only):
+
+```ts
+const data = await amu.get('https://api.example.com/stats', {
+  retries: 2, // retries only network errors (not timeouts, not HTTP status errors)
+});
+```
+
 Advanced retry policy:
 
 ```ts
@@ -129,14 +169,15 @@ const data = await amu.get('https://api.example.com/stats', {
   retries: {
     attempts: 3,
     delay: (attempt) => 2 ** attempt * 100, // 200ms, 400ms, 800ms
-    retryOn: [429, 500, 502, 503, 504],
+    retryOn: ['network-error', 429, 500, 502, 503, 504],
   },
 });
 ```
 
 Retry behavior:
-- Retries network failures by default (except abort timeouts).
-- Retries `AmuError` responses only when `status` is included in `retryOn`.
+- Retries network failures only when `'network-error'` is in `retryOn` (enabled by default).
+- Does not retry timeout aborts (`AbortController`) by default.
+- Does not retry HTTP errors unless those status codes are explicitly included in `retryOn`.
 - Supports fixed or computed delay per attempt.
 
 ### 5.1) Error Handling (Non-2xx)
@@ -239,7 +280,7 @@ amu.request<T>(url, config?)
 `config` supports:
 - `headers`
 - `timeout` (ms)
-- `retries` (`number` or `{ attempts, delay, retryOn }`)
+- `retries` (`number` or `{ attempts, delay, retryOn }`, where `retryOn` supports status codes and `'network-error'`)
 - `params` (query params)
 - `json` (request body)
 - `schema` (response validator: function or object with `parse`)

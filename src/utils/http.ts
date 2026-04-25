@@ -54,10 +54,10 @@ export function appendQueryParams(
 export interface NormalizedRetryPolicy {
   attempts: number;
   delay: (attempt: number, error: unknown) => number;
-  retryOn: number[];
+  retryOn: Array<number | 'network-error'>;
 }
 
-const DEFAULT_RETRY_STATUS_CODES = [429, 500, 502, 503, 504];
+const DEFAULT_RETRY_TARGETS: Array<number | 'network-error'> = ['network-error'];
 
 export function normalizeRetryPolicy(
   retries: AmuConfig['retries'] | undefined
@@ -66,12 +66,12 @@ export function normalizeRetryPolicy(
     return {
       attempts: Math.max(0, retries),
       delay: () => 0,
-      retryOn: DEFAULT_RETRY_STATUS_CODES,
+      retryOn: DEFAULT_RETRY_TARGETS,
     };
   }
 
   if (!retries) {
-    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_STATUS_CODES };
+    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_TARGETS };
   }
 
   return {
@@ -80,15 +80,18 @@ export function normalizeRetryPolicy(
       typeof retries.delay === 'function'
         ? retries.delay
         : () => (typeof retries.delay === 'number' ? retries.delay : 0),
-    retryOn: retries.retryOn?.length ? retries.retryOn : DEFAULT_RETRY_STATUS_CODES,
+    retryOn: retries.retryOn?.length ? retries.retryOn : DEFAULT_RETRY_TARGETS,
   };
 }
 
-export function shouldRetryError(error: unknown, retryOn: number[]): boolean {
+export function shouldRetryError(error: unknown, retryOn: Array<number | 'network-error'>): boolean {
   if (error instanceof AmuError) {
     return retryOn.includes(error.status);
   }
-  return getErrorName(error) !== 'AbortError';
+  if (getErrorName(error) === 'AbortError') {
+    return false;
+  }
+  return retryOn.includes('network-error');
 }
 
 export async function sleep(ms: number): Promise<void> {

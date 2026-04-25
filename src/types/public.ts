@@ -5,7 +5,7 @@ export type AmuSchema<T> =
 export interface AmuRetryConfig {
   attempts: number;
   delay?: number | ((attempt: number, error: unknown) => number);
-  retryOn?: number[];
+  retryOn?: Array<number | 'network-error'>;
 }
 
 export interface AmuConfig extends RequestInit {
