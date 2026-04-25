@@ -1,6 +1,7 @@
 # Amu
 
-**Amu** is a graceful, ultra-lightweight HTTP client for modern JavaScript and TypeScript. Built on the native Fetch API, it provides the developer experience of Axios with the performance and size of a minimalist wrapper.
+**Amu** is **Fetch done right (without the pain)** for modern JavaScript and TypeScript apps.
+It keeps native Fetch performance, but removes the repetitive parts that slow teams down.
 
 Named after **Amayra**, this library is designed to be as clean, fast, and reliable as possible.
 
@@ -10,24 +11,30 @@ Named after **Amayra**, this library is designed to be as clean, fast, and relia
 npm install amu-http
 ```
 
-## ✨ Why Amu?
+## ✨ Fetch Done Right
 
-* **Zero-Boilerplate**: Automatically parses JSON responses. No more `(await res).json()`.
-* **Direct Access**: `await amu.get()` returns your data directly, not a wrapper object.
-* **Axios-Style API**: Use the familiar `post(url, data, config)` signature.
-* **Hybrid Factory**: Use the default instance or create custom ones by calling `amu()`.
-* **Auto-Retries**: Built-in logic to handle flaky network connections.
-* **Tiniest Bundle**: ~1.5KB—roughly 20x smaller than Axios.
+Modern teams often avoid raw Fetch because of repeated pain points:
 
-## Why It Can Be Better Than Axios
+* **Manual parsing everywhere**: `await res.json()` in every call site.
+* **Inconsistent error handling**: every project invents a different pattern.
+* **Retries missing by default**: flaky networks become app-level bugs.
+* **Timeout boilerplate**: repeated `AbortController` wiring in business code.
 
-If your app already runs on modern runtimes (browser, Node 18+), Amu can be a better fit than Axios for many use cases:
+Amu keeps native Fetch, but solves those pains out of the box:
 
-* **Smaller bundle footprint**: Amu is dramatically lighter, which helps web performance and cold starts.
-* **Native Fetch under the hood**: No custom adapter layer, so behavior stays close to platform standards.
-* **Cleaner response handling**: `await amu.get()` gives parsed data directly instead of `response.data`.
-* **Simple API surface**: Common HTTP methods, retries, timeout, JSON body, and headers without extra setup.
-* **Factory + instance pattern**: Use one default client or create isolated clients for multiple APIs.
+* **Auto JSON/Text parsing** with direct data return (`await amu.get()`).
+* **Consistent request flow** with built-in retries and timeout handling.
+* **Axios-style ergonomics** (`post(url, data, config)`) on top of Fetch.
+* **Schema validation support** for safer API integrations.
+* **Tiny package footprint** for web and server runtimes.
+
+## Why Choose Amu Over Axios (for modern runtimes)
+
+If you are on browser standards and Node 18+, Amu gives a cleaner Fetch-first model:
+
+* **Fetch-native behavior** instead of adapter-heavy abstraction.
+* **Less wrapper ceremony** while keeping familiar client ergonomics.
+* **Smaller dependency cost** with focused features for modern apps.
 
 When Axios may still be better:
 
@@ -113,6 +120,32 @@ const data = await amu.get('https://api.example.com/stats', {
   timeout: 5000,
   retries: 2,
 });
+```
+
+### 5.1) Error Handling (Non-2xx)
+
+```ts
+import amu, { AmuError } from 'amu-http';
+
+try {
+  await amu.get('https://api.example.com/404');
+} catch (err) {
+  if (err instanceof AmuError) {
+    console.log(err.status);  // 404
+    console.log(err.data);    // parsed response body
+    console.log(err.headers); // response headers
+  }
+}
+```
+
+Amu throws `AmuError` for non-2xx responses:
+
+```ts
+class AmuError extends Error {
+  status: number;
+  data: unknown;
+  headers: Headers;
+}
 ```
 
 ### 6) Create a Custom Instance (Factory)

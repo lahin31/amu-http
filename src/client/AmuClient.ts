@@ -1,5 +1,6 @@
 import { AmuConfig, AmuPromise, AmuSchema } from '../types/public.js';
 import { appendQueryParams, createDefaults, getErrorName, AmuDefaults } from '../utils/http.js';
+import { AmuError } from '../errors/AmuError.js';
 import { AmuValidationError } from '../errors/AmuValidationError.js';
 
 export class Amu {
@@ -32,6 +33,12 @@ export class Amu {
     }
   }
 
+  private async parseResponseBody(response: Response): Promise<unknown> {
+    if (response.status === 204) return null;
+    const contentType = response.headers.get('content-type') || '';
+    return contentType.includes('application/json') ? await response.json() : await response.text();
+  }
+
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T> {
     const maxRetries = options.retries ?? this.defaults.retries;
 
@@ -55,7 +62,10 @@ export class Amu {
       try {
         const response = await fetch(url, { ...config, signal: controller.signal });
         clearTimeout(timer);
-        if (!response.ok) throw { status: response.status, response };
+        if (!response.ok) {
+          const errorData = await this.parseResponseBody(response);
+          throw new AmuError(response.status, errorData, response.headers);
+        }
         return response;
       } catch (err: unknown) {
         clearTimeout(timer);
@@ -69,9 +79,7 @@ export class Amu {
     };
 
     const parsedPromise = execute(maxRetries).then(async (res: Response) => {
-      if (res.status === 204) return null;
-      const contentType = res.headers.get('content-type') || '';
-      const data = contentType.includes('application/json') ? await res.json() : await res.text();
+      const data = await this.parseResponseBody(res);
       if (!options.schema) return data as T;
       return this.validateWithSchema<T>(options.schema, data);
     }) as AmuPromise<T>;
