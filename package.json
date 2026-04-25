@@ -1,0 +1,43 @@
+{
+  "name": "amu-http",
+  "version": "1.0.0",
+  "description": "A graceful, lightweight HTTP client built on Fetch.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --dts --minify --clean --outDir dist",
+    "dev": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --watch --dts --outDir dist",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run build",
+    "test": "npm run example:get",
+    "example:get": "npm run build && node examples/get-users.js",
+    "example:post": "npm run build && node examples/create-post.js",
+    "example:bearer": "npm run build && node examples/bearer-token.js"
+  },
+  "keywords": [
+    "http",
+    "fetch",
+    "amu",
+    "amayra",
+    "lightweight"
+  ],
+  "author": "Technext",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}
