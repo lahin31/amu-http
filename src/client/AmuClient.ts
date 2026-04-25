@@ -1,5 +1,6 @@
-import { AmuConfig, AmuPromise } from '../types/public.js';
+import { AmuConfig, AmuPromise, AmuSchema } from '../types/public.js';
 import { appendQueryParams, createDefaults, getErrorName, AmuDefaults } from '../utils/http.js';
+import { AmuValidationError } from '../errors/AmuValidationError.js';
 
 export class Amu {
   public defaults: AmuDefaults;
@@ -14,6 +15,21 @@ export class Amu {
   private updateLoading(delta: number) {
     this.activeRequests += delta;
     this.onLoadingChange(this.activeRequests > 0);
+  }
+
+  private async validateWithSchema<T>(schema: AmuSchema<unknown>, data: unknown): Promise<T> {
+    try {
+      if (typeof schema === 'function') {
+        return (await schema(data)) as T;
+      }
+      return (await schema.parse(data)) as T;
+    } catch (err: unknown) {
+      const issues =
+        typeof err === 'object' && err !== null && 'issues' in err
+          ? (err as { issues: unknown }).issues
+          : undefined;
+      throw new AmuValidationError('Response schema validation failed.', data, issues);
+    }
   }
 
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T> {
@@ -55,7 +71,9 @@ export class Amu {
     const parsedPromise = execute(maxRetries).then(async (res: Response) => {
       if (res.status === 204) return null;
       const contentType = res.headers.get('content-type') || '';
-      return contentType.includes('application/json') ? await res.json() : await res.text();
+      const data = contentType.includes('application/json') ? await res.json() : await res.text();
+      if (!options.schema) return data as T;
+      return this.validateWithSchema<T>(options.schema, data);
     }) as AmuPromise<T>;
 
     parsedPromise.json = async <R = unknown>() => (await execute(maxRetries)).json() as Promise<R>;

@@ -141,6 +141,40 @@ const req2 = amu.get('https://api.example.com/message');
 const asText = await req2.text();
 ```
 
+### 8) Schema Validation (Zod or Custom)
+
+```ts
+import amu, { AmuValidationError } from 'amu-http';
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+});
+
+try {
+  const user = await amu.get('https://api.example.com/user/1', {
+    schema: UserSchema, // uses schema.parse(data)
+  });
+  console.log(user.name);
+} catch (error) {
+  if (error instanceof AmuValidationError) {
+    console.error('Invalid API response shape:', error.issues);
+  }
+}
+```
+
+Custom validator function:
+
+```ts
+const users = await amu.get('https://api.example.com/users', {
+  schema: (input) => {
+    if (!Array.isArray(input)) throw new Error('Expected array');
+    return input as Array<{ id: number; name: string }>;
+  },
+});
+```
+
 ## API Surface
 
 ```ts
@@ -158,6 +192,7 @@ amu.request<T>(url, config?)
 - `retries`
 - `params` (query params)
 - `json` (request body)
+- `schema` (response validator: function or object with `parse`)
 - standard `fetch` `RequestInit` fields
 
 ## Development

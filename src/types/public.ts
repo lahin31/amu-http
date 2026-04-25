@@ -1,3 +1,7 @@
+export type AmuSchema<T> =
+  | ((input: unknown) => T | Promise<T>)
+  | { parse: (input: unknown) => T | Promise<T> };
+
 export interface AmuConfig extends RequestInit {
   baseURL?: string;
   timeout?: number;
@@ -5,6 +9,7 @@ export interface AmuConfig extends RequestInit {
   onLoadingChange?: (isLoading: boolean) => void;
   json?: unknown;
   params?: Record<string, string | number | boolean | null | undefined>;
+  schema?: AmuSchema<unknown>;
 }
 
 export interface AmuPromise<T> extends Promise<T> {
