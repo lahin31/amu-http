@@ -31,7 +31,8 @@
     "example:post": "npm run build && node examples/create-post.js",
     "example:bearer": "npm run build && node examples/bearer-token.js",
     "example:retry:safe": "npm run build && node examples/retry-safe-default.js",
-    "example:retry:advanced": "npm run build && node examples/retry-advanced.js"
+    "example:retry:advanced": "npm run build && node examples/retry-advanced.js",
+    "release": "npm version patch && git push --follow-tags"
   },
   "keywords": [
     "http",
@@ -42,6 +43,9 @@
   ],
   "author": "Technext",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
