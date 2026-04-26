@@ -118,6 +118,21 @@ await amu.get('/users', {
 });
 ```
 
+You can also pass query params directly in the URL:
+
+```ts
+const users = await amu.get('/users?page=1&limit=10');
+```
+
+Mixing URL query + `params` also works:
+
+```ts
+await amu.get('/users?page=1', {
+  params: { limit: 10 },
+});
+// Final URL: /users?page=1&limit=10
+```
+
 ---
 
 ### Headers / Auth
