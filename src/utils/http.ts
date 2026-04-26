@@ -1,5 +1,6 @@
 import { AmuConfig, AmuRetryConfig } from '../types/public.js';
 import { AmuError } from '../errors/AmuError.js';
+import { AmuNetworkError, AmuNetworkErrorKind } from '../errors/AmuNetworkError.js';
 import { AmuUrlError } from '../errors/AmuUrlError.js';
 
 export interface AmuDefaults {
@@ -107,6 +108,9 @@ export function shouldRetryMethod(method: string | undefined, allowNonIdempotent
 }
 
 export function shouldRetryError(error: unknown, retryOn: Array<number | 'network-error'>): boolean {
+  if (error instanceof AmuNetworkError) {
+    return error.isRetryable;
+  }
   if (error instanceof AmuError) {
     return retryOn.includes(error.status);
   }
@@ -114,6 +118,22 @@ export function shouldRetryError(error: unknown, retryOn: Array<number | 'networ
     return false;
   }
   return retryOn.includes('network-error');
+}
+
+export function classifyNetworkError(error: unknown, didTimeout: boolean): AmuNetworkErrorKind {
+  if (didTimeout) return 'timeout';
+
+  const name = getErrorName(error);
+  if (name === 'AbortError') return 'abort';
+
+  if (
+    error instanceof TypeError ||
+    (typeof error === 'object' && error !== null && 'code' in error)
+  ) {
+    return 'network';
+  }
+
+  return 'unknown';
 }
 
 export async function sleep(ms: number): Promise<void> {

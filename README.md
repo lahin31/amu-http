@@ -267,6 +267,22 @@ class AmuError extends Error {
 }
 ```
 
+### 5.2) Structured Network Errors
+
+```ts
+import amu, { AmuNetworkError } from 'amu-http';
+
+try {
+  await amu.get('https://api.example.com/users', { retries: 1 });
+} catch (err) {
+  if (err instanceof AmuNetworkError) {
+    console.log(err.kind);        // 'network' | 'timeout' | 'abort' | 'unknown'
+    console.log(err.isRetryable); // retry decision signal
+    console.log(err.cause);       // original underlying error
+  }
+}
+```
+
 ### 6) Create a Custom Instance (Factory)
 
 ```ts

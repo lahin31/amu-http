@@ -1,6 +1,7 @@
 import { AmuConfig, AmuPromise, AmuSchema } from '../types/public.js';
 import {
   appendQueryParams,
+  classifyNetworkError,
   createDefaults,
   AmuDefaults,
   normalizeRetryPolicy,
@@ -9,6 +10,8 @@ import {
   sleep,
 } from '../utils/http.js';
 import { AmuError } from '../errors/AmuError.js';
+import { AmuNetworkError } from '../errors/AmuNetworkError.js';
+import { AmuUrlError } from '../errors/AmuUrlError.js';
 import { AmuValidationError } from '../errors/AmuValidationError.js';
 
 export class Amu {
@@ -67,7 +70,11 @@ export class Amu {
 
       this.updateLoading(1);
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), config.timeout);
+      let didTimeout = false;
+      const timer = setTimeout(() => {
+        didTimeout = true;
+        controller.abort();
+      }, config.timeout);
 
       try {
         const response = await fetch(url, { ...config, signal: controller.signal });
@@ -79,16 +86,24 @@ export class Amu {
         return response;
       } catch (err: unknown) {
         clearTimeout(timer);
+        const normalizedError =
+          err instanceof AmuError || err instanceof AmuValidationError || err instanceof AmuUrlError
+            ? err
+            : new AmuNetworkError(
+                classifyNetworkError(err, didTimeout),
+                shouldRetryError(err, retryPolicy.retryOn),
+                err
+              );
         if (
           retriesLeft > 0 &&
           shouldRetryMethod(requestMethod, retryPolicy.allowNonIdempotent) &&
-          shouldRetryError(err, retryPolicy.retryOn)
+          shouldRetryError(normalizedError, retryPolicy.retryOn)
         ) {
-          const delayMs = retryPolicy.delay(attempt + 1, err);
+          const delayMs = retryPolicy.delay(attempt + 1, normalizedError);
           await sleep(delayMs);
           return execute(retriesLeft - 1, attempt + 1);
         }
-        throw err;
+        throw normalizedError;
       } finally {
         this.updateLoading(-1);
       }

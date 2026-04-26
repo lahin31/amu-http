@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Amu } from '../../src/client/AmuClient.js';
 import { AmuError } from '../../src/errors/AmuError.js';
+import { AmuNetworkError } from '../../src/errors/AmuNetworkError.js';
 
 const fetchMock = vi.fn();
 
@@ -71,7 +72,7 @@ describe('Amu client', () => {
 
     await expect(
       amu.post('https://api.example.com/orders', { id: 1 }, { retries: { attempts: 2 } })
-    ).rejects.toBeInstanceOf(Error);
+    ).rejects.toBeInstanceOf(AmuNetworkError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -99,8 +100,24 @@ describe('Amu client', () => {
 
     const amu = new Amu();
 
-    await expect(amu.get('https://api.example.com/timeout', { retries: 2 })).rejects.toBe(abortError);
+    await expect(amu.get('https://api.example.com/timeout', { retries: 2 })).rejects.toMatchObject({
+      name: 'AmuNetworkError',
+      kind: 'abort',
+      isRetryable: false,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('wraps generic network failures as AmuNetworkError', async () => {
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+
+    const amu = new Amu();
+
+    await expect(amu.get('https://api.example.com/offline')).rejects.toMatchObject({
+      name: 'AmuNetworkError',
+      kind: 'network',
+      isRetryable: true,
+    });
   });
 
   it('retries configured status codes in retryOn', async () => {
