@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { appendQueryParams, normalizeRetryPolicy, shouldRetryMethod } from '../../src/utils/http.js';
+import {
+  appendQueryParams,
+  normalizeRetryPolicy,
+  shouldRetryMethod,
+  validateProtocolSlashes,
+} from '../../src/utils/http.js';
+import { AmuUrlError } from '../../src/errors/AmuUrlError.js';
 
 describe('http utils', () => {
   it('appends query params to clean URL', () => {
@@ -32,5 +38,13 @@ describe('http utils', () => {
     expect(shouldRetryMethod('GET', false)).toBe(true);
     expect(shouldRetryMethod('HEAD', false)).toBe(true);
     expect(shouldRetryMethod('POST', false)).toBe(false);
+  });
+
+  it('rejects malformed absolute protocol URL without //', () => {
+    expect(() => validateProtocolSlashes('https:google.com')).toThrow(AmuUrlError);
+  });
+
+  it('allows valid localhost URL with protocol and port', () => {
+    expect(() => validateProtocolSlashes('http://localhost:4000/users')).not.toThrow();
   });
 });

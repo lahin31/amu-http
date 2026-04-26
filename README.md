@@ -98,6 +98,15 @@ gzip -c dist/index.js | wc -c
 gzip -c dist/index.cjs | wc -c
 ```
 
+## URL Safety
+
+Amu rejects malformed absolute URLs that miss `//` after protocol.
+
+```ts
+await amu.get('https:google.com'); // throws AmuUrlError
+await amu.get('http://localhost:4000/users'); // valid
+```
+
 ---
 
 ## 🚀 Usage Examples

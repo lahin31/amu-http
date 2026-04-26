@@ -1,5 +1,6 @@
 import { AmuConfig, AmuRetryConfig } from '../types/public.js';
 import { AmuError } from '../errors/AmuError.js';
+import { AmuUrlError } from '../errors/AmuUrlError.js';
 
 export interface AmuDefaults {
   baseURL: string;
@@ -35,6 +36,8 @@ export function appendQueryParams(
   baseURL: string,
   params?: AmuConfig['params']
 ): string {
+  validateProtocolSlashes(endpoint);
+
   let url = endpoint.startsWith('http') ? endpoint : `${baseURL}${endpoint}`;
   if (!params) return url;
 
@@ -49,6 +52,14 @@ export function appendQueryParams(
     url += (url.includes('?') ? '&' : '?') + query;
   }
   return url;
+}
+
+const MALFORMED_PROTOCOL_RE = /^https?:[^/]/i;
+
+export function validateProtocolSlashes(url: string): void {
+  if (!MALFORMED_PROTOCOL_RE.test(url)) return;
+  const suggestion = url.replace(/^([a-z]+:)(?!\/\/)/i, '$1//');
+  throw new AmuUrlError(url, suggestion);
 }
 
 export interface NormalizedRetryPolicy {
