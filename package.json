@@ -5,6 +5,11 @@
   "type": "module",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lahin31/amu-http.git"
+  },
+  "homepage": "https://github.com/lahin31/amu-http#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
