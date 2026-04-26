@@ -11,6 +11,21 @@ Named after **Amayra**, this library is designed to be as clean, fast, and relia
 npm install amu-http
 ```
 
+Runtime usage:
+
+```ts
+// ESM (Node ESM, Next.js, modern bundlers)
+import amu from 'amu-http';
+```
+
+```js
+// CommonJS
+const amu = require('amu-http');
+```
+
+If your project is ESM (`"type": "module"`), `require` is not available by default.
+Use `import` (recommended) or Node's `createRequire` when needed.
+
 ## ⚡ Aha Moment
 
 ```ts

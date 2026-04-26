@@ -9,12 +9,13 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "require": "./require.cjs"
     }
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "require.cjs"
   ],
   "scripts": {
     "build": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --dts --minify --clean --outDir dist",
