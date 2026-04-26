@@ -1,8 +1,10 @@
 # Amu
 
-**Amu** is a **Fetch-first HTTP client with correct defaults** for modern JavaScript and TypeScript apps.
+**Amu** is a Fetch-first HTTP client for modern JavaScript and TypeScript apps.
 
 It keeps native Fetch behavior while removing the boilerplate that slows teams down in real-world systems.
+
+Safer URL handling by default: strict URL parsing (syntax-level validation only) rejects malformed absolute URLs instead of silently normalizing them.
 
 ---
 
@@ -35,14 +37,22 @@ const users3 = await amu.get('/users');
 ## 💡 Why Amu
 
 - Direct data access (no `res.data`)
-- Smart retries (HTTP-aware)
-- Structured errors
-- URL safety (rejects malformed absolute URLs)
+- Deterministic retries (network errors by default; configurable status-code retries)
+- Structured errors (HTTP + network)
+- URL safety (strict URL parsing, syntax-level validation only)
 - Schema validation support
 - Tiny footprint (~1.6KB gzip)
 
-Amu is not a wrapper over Fetch.  
-It is a **correct-by-default HTTP client**.
+Amu is a thin, opinionated layer over Fetch with explicit, testable behavior:
+
+- Throws on non-2xx responses (`AmuError`) instead of returning `ok: false` responses.
+- Retries only idempotent methods (`GET`, `HEAD`) by default.
+- Rejects malformed absolute URLs early (`AmuUrlError`).
+
+It also has two standout capabilities:
+
+- **Structured Network Errors** (`AmuNetworkError`) for reliable retry/debug logic
+- **Built-in Schema Validation** for runtime-safe API parsing
 
 ---
 
@@ -53,9 +63,30 @@ It is a **correct-by-default HTTP client**.
 | Data access         | Direct (`await get()`)   | `res.data`           |
 | Fetch-native        | ✅                        | ❌ (adapters)        |
 | Retry semantics     | HTTP-aware               | Manual               |
-| Error structure     | Typed & structured       | Inconsistent         |
+| Error structure     | Typed & structured       | Less structured      |
 | URL validation      | Strict                   | Lenient              |
 | Bundle size         | ~1.6KB (gzip)            | ~14KB (gzip)         |
+
+---
+
+## 🎯 Killer Features
+
+### 1) Structured Network Errors
+
+Amu provides a dedicated `AmuNetworkError` with:
+- `kind` (`network | timeout | abort | unknown`)
+- `isRetryable`
+- `cause`
+
+This gives you predictable retry and debugging behavior without guessing from generic `"Network Error"` strings.
+
+### 2) Built-in Schema Validation
+
+Amu supports validator-driven parsing at the request layer:
+- Zod-style schema support (via `.parse` interface) + custom validators
+- custom validation functions
+
+You get runtime data-shape guarantees at the boundary where APIs enter your app.
 
 ---
 
@@ -176,7 +207,7 @@ await amu.get('/stats', {
 
 ## ❌ URL Safety
 
-Amu rejects malformed absolute URLs.
+Amu performs strict URL parsing (syntax-level validation only) and rejects malformed absolute URLs.
 
 ```ts
 await amu.get('https:google.com'); // throws AmuUrlError
@@ -218,6 +249,47 @@ try {
   }
 }
 ```
+
+---
+
+## Failure Behavior Spec
+
+Amu has explicit failure semantics:
+
+- **HTTP 4xx/5xx (e.g. 404, 500)**  
+  Throws `AmuError` with:
+  - `status`: HTTP status code
+  - `data`: parsed response body (JSON/text/null)
+  - `headers`: response headers
+
+- **Network failure (DNS/offline/unreachable transport)**  
+  Throws `AmuNetworkError` with:
+  - `kind: 'network'`
+  - `isRetryable` based on retry policy
+  - `cause`: original underlying error
+
+- **Timeout**  
+  Throws `AmuNetworkError` with:
+  - `kind: 'timeout'`
+  - `isRetryable: false` by default
+
+- **Abort**  
+  Throws `AmuNetworkError` with:
+  - `kind: 'abort'`
+  - `isRetryable: false` by default
+
+- **Schema validation failure**  
+  Throws `AmuValidationError` with:
+  - `data`: unvalidated response payload
+  - `issues`: validator-provided issues (if available)
+
+- **Malformed absolute URL (e.g. `https:google.com`)**  
+  Throws `AmuUrlError` before request execution.
+
+Retry defaults:
+- Network errors are retryable when configured via `retries`.
+- HTTP status retries happen only when status codes are listed in `retryOn`.
+- Retries are idempotent-method-only by default (`GET`, `HEAD`) unless `allowNonIdempotent: true`.
 
 ---
 
@@ -285,5 +357,4 @@ npm run test:watch
 npm run test:coverage
 npm run build
 npm run dev
-```
 ```
