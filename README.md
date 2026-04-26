@@ -1,9 +1,10 @@
 # Amu
 
-**Amu** is **Fetch done right (without the pain)** for modern JavaScript and TypeScript apps.
-It keeps native Fetch performance, but removes the repetitive parts that slow teams down.
+**Amu** is a **Fetch-first HTTP client with correct defaults** for modern JavaScript and TypeScript apps.
 
-Named after **Amayra**, this library is designed to be as clean, fast, and reliable as possible.
+It keeps native Fetch behavior while removing the boilerplate that slows teams down in real-world systems.
+
+---
 
 ## 📦 Installation
 
@@ -11,22 +12,9 @@ Named after **Amayra**, this library is designed to be as clean, fast, and relia
 npm install amu-http
 ```
 
-Runtime usage:
+---
 
-```ts
-// ESM (Node ESM, Next.js, modern bundlers)
-import amu from 'amu-http';
-```
-
-```js
-// CommonJS
-const amu = require('amu-http');
-```
-
-If your project is ESM (`"type": "module"`), `require` is not available by default.
-Use `import` (recommended) or Node's `createRequire` when needed.
-
-## ⚡ Aha Moment
+## ⚡ Quick Example
 
 ```ts
 // Native Fetch
@@ -42,330 +30,238 @@ const users2 = res2.data;
 const users3 = await amu.get('/users');
 ```
 
-## ✨ Fetch Done Right
+---
 
-Modern teams often avoid raw Fetch because of repeated pain points:
+## 💡 Why Amu
 
-* **Manual parsing everywhere**: `await res.json()` in every call site.
-* **Inconsistent error handling**: every project invents a different pattern.
-* **Retries missing by default**: flaky networks become app-level bugs.
-* **Timeout boilerplate**: repeated `AbortController` wiring in business code.
+- Direct data access (no `res.data`)
+- Smart retries (HTTP-aware)
+- Structured errors
+- URL safety (rejects malformed absolute URLs)
+- Schema validation support
+- Tiny footprint (~1.6KB gzip)
 
-Amu keeps native Fetch, but solves those pains out of the box:
-
-* **Auto JSON/Text parsing** with direct data return (`await amu.get()`).
-* **Consistent request flow** with built-in retries and timeout handling.
-* **Axios-style ergonomics** (`post(url, data, config)`) on top of Fetch.
-* **Schema validation support** for safer API integrations.
-* **Tiny package footprint** for web and server runtimes.
-
-## Why Choose Amu Over Axios (for modern runtimes)
-
-If you are on browser standards and Node 18+, Amu gives a cleaner Fetch-first model:
-
-* **Fetch-native behavior** instead of adapter-heavy abstraction.
-* **Less wrapper ceremony** while keeping familiar client ergonomics.
-* **Smaller dependency cost** with focused features for modern apps.
-
-When Axios may still be better:
-
-* **Legacy runtime support**: If you need older environments that do not have stable Fetch.
-* **Large interceptor-heavy codebases**: Axios has a mature ecosystem around advanced interceptor workflows.
-
-## 🧠 Design Principles
-
-- **Minimal abstraction over Fetch**
-- **Predictable behavior over magic**
-- **Direct data access over wrapper objects**
-- **Small surface area over feature bloat**
-
-## 📏 Build Size
-
-Current package output (minified, from `dist/`):
-Measured on: `2026-04-26`
-
-- **ESM** (`dist/index.js`): `3693 B` (~`3.6 KB`)
-- **CJS** (`dist/index.cjs`): `4225 B` (~`4.1 KB`)
-- **ESM gzip**: `1597 B` (~`1.6 KB`)
-- **CJS gzip**: `1833 B` (~`1.8 KB`)
-
-Measure locally:
-
-```bash
-npm run build
-ls -l dist
-gzip -c dist/index.js | wc -c
-gzip -c dist/index.cjs | wc -c
-```
-
-## URL Safety
-
-Amu rejects malformed absolute URLs that miss `//` after protocol.
-
-```ts
-await amu.get('https:google.com'); // throws AmuUrlError
-await amu.get('http://localhost:4000/users'); // valid
-```
+Amu is not a wrapper over Fetch.  
+It is a **correct-by-default HTTP client**.
 
 ---
 
-## 🚀 Usage Examples
+## ⚖️ Amu vs Axios
 
-### 1) Basic GET
+| Feature              | Amu                     | Axios                |
+|---------------------|--------------------------|----------------------|
+| Data access         | Direct (`await get()`)   | `res.data`           |
+| Fetch-native        | ✅                        | ❌ (adapters)        |
+| Retry semantics     | HTTP-aware               | Manual               |
+| Error structure     | Typed & structured       | Inconsistent         |
+| URL validation      | Strict                   | Lenient              |
+| Bundle size         | ~1.6KB (gzip)            | ~14KB (gzip)         |
+
+---
+
+## 🧠 Core Features
+
+- Auto JSON / text parsing  
+- Built-in timeout support  
+- Retry policies with full control  
+- Query params support  
+- Schema validation (Zod + custom)  
+- Instance-based client factory  
+- Tiny footprint for browser & server  
+
+---
+
+## 🚀 Usage
+
+### Basic GET
 
 ```ts
 import amu from 'amu-http';
 
 const users = await amu.get('https://jsonplaceholder.typicode.com/users');
-console.log(users.length);
 ```
 
-### 2) POST JSON Body (Axios-style)
+---
+
+### POST (JSON)
 
 ```ts
 import amu from 'amu-http';
 
-const created = await amu.post('https://jsonplaceholder.typicode.com/posts', {
+await amu.post('/posts', {
   title: 'hello',
   body: 'from amu',
-  userId: 1,
 });
 ```
 
-### 3) PUT, PATCH, DELETE
+---
+
+### PUT / PATCH / DELETE
 
 ```ts
 import amu from 'amu-http';
 
-await amu.put('https://api.example.com/users/1', { name: 'Updated Name' });
-await amu.patch('https://api.example.com/users/1', { role: 'admin' });
-await amu.delete('https://api.example.com/users/1');
+await amu.put('/users/1', { name: 'Updated Name' });
+await amu.patch('/users/1', { role: 'admin' });
+await amu.delete('/users/1');
 ```
 
-### 3.1) Query Params
+---
+
+### Query Params
 
 ```ts
 import amu from 'amu-http';
 
-const users = await amu.get('https://api.example.com/users', {
+await amu.get('/users', {
   params: { page: 1, limit: 10 },
 });
 ```
 
-You can also pass query params directly in the URL:
+---
 
-```ts
-const users = await amu.get('https://api.example.com/users?page=1&limit=10');
-```
-
-Mixing URL query + `params` also works:
-
-```ts
-await amu.get('https://api.example.com/users?page=1', {
-  params: { limit: 10 },
-});
-// Final URL: /users?page=1&limit=10
-```
-
-### 4) Bearer Token / Custom Headers
+### Headers / Auth
 
 ```ts
 import amu from 'amu-http';
 
-const token = process.env.API_TOKEN;
-
-const profile = await amu.get('https://api.example.com/me', {
+await amu.get('/me', {
   headers: {
     Authorization: `Bearer ${token}`,
   },
 });
 ```
 
-### 4.1) Bearer Token with Data (Authenticated POST)
+---
+
+### Timeout & Retries
 
 ```ts
 import amu from 'amu-http';
 
-const token = process.env.API_TOKEN;
-
-const order = await amu.post(
-  'https://api.example.com/orders',
-  {
-    productId: 'sku_123',
-    quantity: 2,
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
-```
-
-### 5) Timeout and Retries
-
-```ts
-import amu from 'amu-http';
-
-const data = await amu.get('https://api.example.com/stats', {
+await amu.get('/stats', {
   timeout: 5000,
   retries: 2,
 });
 ```
 
-Safe default retries (network failures only):
+Advanced retry:
 
 ```ts
-const data = await amu.get('https://api.example.com/stats', {
-  retries: 2, // retries only network errors (not timeouts, not HTTP status errors)
-});
-```
-
-Advanced retry policy:
-
-```ts
-const data = await amu.get('https://api.example.com/stats', {
+await amu.get('/stats', {
   retries: {
     attempts: 3,
-    delay: (attempt) => 2 ** attempt * 100, // 200ms, 400ms, 800ms
+    delay: (attempt) => 2 ** attempt * 100,
     retryOn: ['network-error', 429, 500, 502, 503, 504],
   },
 });
 ```
 
-Retry behavior:
-- Retries network failures only when `'network-error'` is in `retryOn` (enabled by default).
-- Does not retry timeout aborts (`AbortController`) by default.
-- Does not retry HTTP errors unless those status codes are explicitly included in `retryOn`.
-- Retries are applied only to idempotent methods (`GET`, `HEAD`) by default.
-- Non-idempotent methods (`POST`, `PATCH`, `DELETE`, etc.) are not retried unless `allowNonIdempotent: true` is set.
-- Supports fixed or computed delay per attempt.
+---
 
-### 5.1) Error Handling (Non-2xx)
+## ❌ URL Safety
+
+Amu rejects malformed absolute URLs.
+
+```ts
+await amu.get('https:google.com'); // throws AmuUrlError
+await amu.get('https://google.com'); // valid
+```
+
+---
+
+## ⚠️ Error Handling
 
 ```ts
 import amu, { AmuError } from 'amu-http';
 
 try {
-  await amu.get('https://api.example.com/404');
+  await amu.get('/404');
 } catch (err) {
   if (err instanceof AmuError) {
-    console.log(err.status);  // 404
-    console.log(err.data);    // parsed response body
-    console.log(err.headers); // response headers
+    console.log(err.status);
+    console.log(err.data);
+    console.log(err.headers);
   }
 }
 ```
 
-Amu throws `AmuError` for non-2xx responses:
+---
 
-```ts
-class AmuError extends Error {
-  status: number;
-  data: unknown;
-  headers: Headers;
-}
-```
-
-### 5.2) Structured Network Errors
+## 🌐 Network Errors
 
 ```ts
 import amu, { AmuNetworkError } from 'amu-http';
 
 try {
-  await amu.get('https://api.example.com/users', { retries: 1 });
+  await amu.get('/users');
 } catch (err) {
   if (err instanceof AmuNetworkError) {
-    console.log(err.kind);        // 'network' | 'timeout' | 'abort' | 'unknown'
-    console.log(err.isRetryable); // retry decision signal
-    console.log(err.cause);       // original underlying error
+    console.log(err.kind); // network | timeout | abort | unknown
+    console.log(err.isRetryable);
+    console.log(err.cause);
   }
 }
 ```
 
-### 6) Create a Custom Instance (Factory)
+---
+
+## 🧪 Schema Validation
+
+```ts
+import amu from 'amu-http';
+import { z } from 'zod';
+
+const User = z.object({
+  id: z.number(),
+  name: z.string(),
+});
+
+const user = await amu.get('/user/1', {
+  schema: User,
+});
+```
+
+---
+
+## 🏭 Custom Instance
 
 ```ts
 import amu from 'amu-http';
 
 const api = amu('https://api.example.com', {
-  headers: { 'X-App': 'dashboard' },
   timeout: 8000,
   retries: 1,
-});
-
-const me = await api.get('/me');
-```
-
-### 7) Explicit Response Readers
-
-```ts
-import amu from 'amu-http';
-
-const req = amu.get('https://api.example.com/raw');
-const asJson = await req.json();
-
-const req2 = amu.get('https://api.example.com/message');
-const asText = await req2.text();
-```
-
-The request is executed once. Response readers reuse the same underlying response.
-
-### 8) Schema Validation (Zod or Custom)
-
-```ts
-import amu, { AmuValidationError } from 'amu-http';
-import { z } from 'zod';
-
-const UserSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-});
-
-try {
-  const user = await amu.get('https://api.example.com/user/1', {
-    schema: UserSchema, // uses schema.parse(data)
-  });
-  console.log(user.name);
-} catch (error) {
-  if (error instanceof AmuValidationError) {
-    console.error('Invalid API response shape:', error.issues);
-  }
-}
-```
-
-Custom validator function:
-
-```ts
-const users = await amu.get('https://api.example.com/users', {
-  schema: (input) => {
-    if (!Array.isArray(input)) throw new Error('Expected array');
-    return input as Array<{ id: number; name: string }>;
+  headers: {
+    'X-App': 'dashboard',
   },
 });
+
+await api.get('/me');
 ```
 
-## API Surface
+---
 
-```ts
-amu.get<T>(url, config?)
-amu.post<T>(url, data?, config?)
-amu.put<T>(url, data?, config?)
-amu.patch<T>(url, data?, config?)
-amu.delete<T>(url, config?)
-amu.request<T>(url, config?)
-```
+## 📏 Size
 
-`config` supports:
-- `headers`
-- `timeout` (ms)
-- `retries` (`number` or `{ attempts, delay, retryOn, allowNonIdempotent }`, where `retryOn` supports status codes and `'network-error'`)
-- `params` (query params)
-- `json` (request body)
-- `schema` (response validator: function or object with `parse`)
-- standard `fetch` `RequestInit` fields
+- **Amu (gzip)**: ~1.6 KB  
+- **Axios (gzip)**: ~14 KB  
 
-## Development
+Amu is ~9x smaller while keeping essential features for modern runtimes.
+
+---
+
+## 🧠 Design Principles
+
+- Minimal abstraction over Fetch  
+- Predictable behavior over magic  
+- Correct defaults over configuration  
+- Small surface area over feature bloat  
+- Production-safe by design  
+
+---
+
+## 🛠 Development
 
 ```bash
 npm run lint
@@ -374,4 +270,5 @@ npm run test:watch
 npm run test:coverage
 npm run build
 npm run dev
+```
 ```
