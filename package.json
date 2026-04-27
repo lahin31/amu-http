@@ -38,7 +38,10 @@
     "example:retry:safe": "npm run build && node examples/retry-safe-default.js",
     "example:retry:advanced": "npm run build && node examples/retry-advanced.js",
     "release": "standard-version && git push --follow-tags",
-    "publish": "npm publish"
+    "publish": "npm publish",
+    "release:patch": "standard-version --release-as patch && git push --follow-tags && npm publish",
+    "release:minor": "standard-version --release-as minor && git push --follow-tags && npm publish",
+    "release:major": "standard-version --release-as major && git push --follow-tags && npm publish"
   },
   "keywords": [
     "http",
