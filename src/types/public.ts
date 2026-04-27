@@ -17,6 +17,16 @@ export interface AmuConfig extends RequestInit {
   json?: unknown;
   params?: Record<string, string | number | boolean | null | undefined>;
   schema?: AmuSchema<unknown>;
+  raw?: boolean;
+}
+
+export interface AmuRawResponse<T = unknown> {
+  data: T;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  config: AmuConfig;
+  request: Response;
 }
 
 export interface AmuPromise<T> extends Promise<T> {

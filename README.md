@@ -114,6 +114,34 @@ const users = await amu.get('https://jsonplaceholder.typicode.com/users');
 
 ---
 
+### Axios-style Raw Response
+
+If you prefer Axios-like response objects, pass `raw: true`.
+
+```ts
+import amu from 'amu-http';
+
+const res = await amu.get('/users', { raw: true });
+
+console.log(res.data); // parsed payload
+console.log(res.status); // HTTP status code
+console.log(res.statusText); // HTTP status text
+console.log(res.headers); // plain header object
+console.log(res.config); // resolved request config
+console.log(res.request); // native Fetch Response
+```
+
+With schema validation, `res.data` is still validated:
+
+```ts
+const res = await amu.get('/user/1', {
+  raw: true,
+  schema: UserSchema,
+});
+```
+
+---
+
 ### POST (JSON)
 
 ```ts

@@ -1,4 +1,4 @@
-import { AmuConfig, AmuPromise, AmuSchema } from '../types/public.js';
+import { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema } from '../types/public.js';
 import {
   appendQueryParams,
   classifyNetworkError,
@@ -51,8 +51,15 @@ export class Amu {
     return contentType.includes('application/json') ? await target.json() : await target.text();
   }
 
-  request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T> {
+  private toRawHeaders(headers: Headers): Record<string, string> {
+    return Object.fromEntries(headers.entries());
+  }
+
+  request<T = unknown>(endpoint: string, options: AmuConfig & { raw: true }): AmuPromise<AmuRawResponse<T>>;
+  request<T = unknown>(endpoint: string, options?: AmuConfig): AmuPromise<T>;
+  request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T | AmuRawResponse<T>> {
     const retryPolicy = normalizeRetryPolicy(options.retries ?? this.defaults.retries);
+    let finalConfig: AmuConfig = {};
 
     const execute = async (retriesLeft: number, attempt = 0): Promise<Response> => {
       const config = {
@@ -60,6 +67,7 @@ export class Amu {
         ...options,
         headers: { ...this.defaults.headers, ...options.headers },
       };
+      finalConfig = config;
       const requestMethod = (config.method ?? 'GET').toString().toUpperCase();
 
       const url = appendQueryParams(endpoint, this.defaults.baseURL, options.params);
@@ -113,9 +121,18 @@ export class Amu {
 
     const parsedPromise = responsePromise.then(async (res: Response) => {
       const data = await this.parseResponseBody(res, true);
-      if (!options.schema) return data as T;
-      return this.validateWithSchema<T>(options.schema, data);
-    }) as AmuPromise<T>;
+      const parsedData = options.schema ? await this.validateWithSchema<T>(options.schema, data) : (data as T);
+      if (!options.raw) return parsedData;
+
+      return {
+        data: parsedData,
+        status: res.status,
+        statusText: res.statusText,
+        headers: this.toRawHeaders(res.headers),
+        config: finalConfig,
+        request: res,
+      } as AmuRawResponse<T>;
+    }) as AmuPromise<T | AmuRawResponse<T>>;
 
     parsedPromise.json = async <R = unknown>() => (await responsePromise).clone().json() as Promise<R>;
     parsedPromise.text = async () => (await responsePromise).clone().text();

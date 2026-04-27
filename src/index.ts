@@ -9,6 +9,6 @@ export { AmuNetworkError } from './errors/AmuNetworkError.js';
 export { AmuUrlError } from './errors/AmuUrlError.js';
 export { AmuValidationError } from './errors/AmuValidationError.js';
 export type { AmuHybrid } from './factory/createAmu.js';
-export type { AmuConfig, AmuPromise, AmuSchema, AmuRetryConfig } from './types/public.js';
+export type { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema, AmuRetryConfig } from './types/public.js';
 export { amu };
 export default amu;
