@@ -55,7 +55,9 @@ describe('schema inference', () => {
 
 describe('type-safe URL params', () => {
   it('requires `params` when path has :name', () => {
-    expectTypeOf(api.get<'/users/:id'>)
+    // Generic order: <TResponse, Path, S>. Use `unknown` for the response and
+    // pin the path as the second generic.
+    expectTypeOf(api.get<unknown, '/users/:id'>)
       .parameter(1)
       .toMatchTypeOf<{
         params: { id: string | number };
@@ -68,10 +70,27 @@ describe('type-safe URL params', () => {
   });
 
   it('extracts multiple params correctly', () => {
-    expectTypeOf(api.get<'/u/:id/posts/:postId'>)
+    expectTypeOf(api.get<unknown, '/u/:id/posts/:postId'>)
       .parameter(1)
       .toMatchTypeOf<{
         params: { id: string | number; postId: string | number };
       }>();
   });
+
+  it('explicit TResponse generic types the result without a schema', async () => {
+    type User = { id: number; name: string };
+    const u = await api.get<User>('https://x/u');
+    expectTypeOf(u).toEqualTypeOf<User>();
+  });
+
+  it('explicit TResponse generic also works for body methods', async () => {
+    type Out = { ok: boolean };
+    const r = await api.post<Out>('https://x/u', { name: 'Ada' });
+    expectTypeOf(r).toEqualTypeOf<Out>();
+  });
+
+  // Note: when BOTH an explicit `<TResponse>` generic and a `schema:` option are
+  // given, the explicit generic wins for type purposes (TS doesn't perform
+  // partial generic inference). Runtime schema validation still runs — it just
+  // doesn't drive the static type. Pass either, not both.
 });

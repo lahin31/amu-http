@@ -94,33 +94,66 @@ type OptionsArgs<Path extends string, S extends RequestSchema> =
     ? [options?: RequestOptions<S>]
     : [options: RequestOptions<S> & { readonly params: RouteParams<Path> }];
 
-/** A request method that doesn't take a body (GET, HEAD, DELETE, OPTIONS). */
-export type BodylessMethod = <const Path extends string, S extends RequestSchema = RequestSchema>(
-  path: Path,
-  ...args: OptionsArgs<Path, S>
-) => Promise<InferResponse<S>>;
+/**
+ * Resolves the final response type. If a `response` schema is given, its
+ * inferred output wins. Otherwise the explicit `TResponse` generic (or its
+ * `unknown` default) is used.
+ *
+ * The `[X] extends [Y]` (non-distributive) form is needed because when no
+ * schema is provided, `S['response']` is `Schema<unknown> | undefined`, and
+ * distribution would incorrectly take the `InferResponse<S>` branch.
+ */
+type ResolveResponse<TResponse, S extends RequestSchema> = [S['response']] extends [Schema]
+  ? InferResponse<S>
+  : TResponse;
 
-/** A request method that takes a body (POST, PUT, PATCH). */
-export type BodyMethod = <const Path extends string, S extends RequestSchema = RequestSchema>(
-  path: Path,
-  body: InferRequestBody<S>,
-  ...args: OptionsArgs<Path, S>
-) => Promise<InferResponse<S>>;
-
-/** Safe variant — same surface as the throwing methods, returns Result instead. */
-export type SafeBodylessMethod = <
-  const Path extends string,
+/**
+ * A request method that doesn't take a body (GET, HEAD, DELETE, OPTIONS).
+ *
+ * Two ways to type the response (schema wins when both are provided):
+ *
+ *   client.get<User>('/u/:id', { params: { id: 1 } })                       // explicit generic
+ *   client.get('/u/:id', { params: { id: 1 }, schema: { response: User } }) // inferred from schema
+ */
+export type BodylessMethod = <
+  TResponse = unknown,
+  const Path extends string = string,
   S extends RequestSchema = RequestSchema,
 >(
   path: Path,
   ...args: OptionsArgs<Path, S>
-) => Promise<Result<InferResponse<S>>>;
+) => Promise<ResolveResponse<TResponse, S>>;
 
-export type SafeBodyMethod = <const Path extends string, S extends RequestSchema = RequestSchema>(
+/** A request method that takes a body (POST, PUT, PATCH). */
+export type BodyMethod = <
+  TResponse = unknown,
+  const Path extends string = string,
+  S extends RequestSchema = RequestSchema,
+>(
   path: Path,
   body: InferRequestBody<S>,
   ...args: OptionsArgs<Path, S>
-) => Promise<Result<InferResponse<S>>>;
+) => Promise<ResolveResponse<TResponse, S>>;
+
+/** Safe variant — same surface as the throwing methods, returns Result instead. */
+export type SafeBodylessMethod = <
+  TResponse = unknown,
+  const Path extends string = string,
+  S extends RequestSchema = RequestSchema,
+>(
+  path: Path,
+  ...args: OptionsArgs<Path, S>
+) => Promise<Result<ResolveResponse<TResponse, S>>>;
+
+export type SafeBodyMethod = <
+  TResponse = unknown,
+  const Path extends string = string,
+  S extends RequestSchema = RequestSchema,
+>(
+  path: Path,
+  body: InferRequestBody<S>,
+  ...args: OptionsArgs<Path, S>
+) => Promise<Result<ResolveResponse<TResponse, S>>>;
 
 /** Options for streaming methods — adds an optional `method` override. */
 export type StreamOptions<S extends RequestSchema = RequestSchema> = RequestOptions<S> & {
