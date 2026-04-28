@@ -1,61 +1,54 @@
 // @vitest-environment happy-dom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Amu } from '@/client/AmuClient';
-import { AmuError } from '@/errors/AmuError';
+import { z } from 'zod';
+import { AmuError, AmuValidationError, createClient } from '@/index';
 
-const fetchMock = vi.fn();
+const fetchMock = vi.fn<(url: string | URL, init?: RequestInit) => Promise<Response>>();
 vi.stubGlobal('fetch', fetchMock);
 
-afterEach(() => {
-  fetchMock.mockReset();
-});
+afterEach(() => fetchMock.mockReset());
+
+const json = (body: unknown, init: ResponseInit = {}) =>
+  new Response(JSON.stringify(body), {
+    headers: { 'content-type': 'application/json' },
+    ...init,
+  });
 
 describe('browser-like runtime (happy-dom)', () => {
-  it('uses globalThis.fetch and parses JSON via Response', async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ ok: true }), {
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-
-    const amu = new Amu();
-    const data = await amu.get<{ ok: boolean }>('https://api.example.com/ping');
-
+  it('parses JSON via Response in browser env', async () => {
+    fetchMock.mockResolvedValue(json({ ok: true }));
+    const api = createClient();
+    const data = await api.get('https://api.example.com/ping');
     expect(data).toEqual({ ok: true });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('preserves Headers / URL / AbortController APIs in browser-like env', async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify([1, 2, 3]), {
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-
-    const amu = new Amu();
-    await amu.get('https://api.example.com/items', {
-      params: { page: 1 },
+  it('preserves Headers / URL / AbortSignal APIs', async () => {
+    fetchMock.mockResolvedValue(json({ items: [] }));
+    const api = createClient();
+    await api.get('https://api.example.com/items', {
+      query: { page: 1 },
       headers: { 'X-Trace': 'abc' },
     });
-
-    const firstCall = fetchMock.mock.calls[0];
-    if (!firstCall) throw new Error('expected fetch to be called');
-    const [url, init] = firstCall;
-    expect(url).toBe('https://api.example.com/items?page=1');
-    expect((init as RequestInit).signal).toBeInstanceOf(AbortSignal);
-    expect((init as RequestInit).headers).toMatchObject({ 'X-Trace': 'abc' });
+    const call = fetchMock.mock.calls[0];
+    if (!call) throw new Error('expected fetch call');
+    expect(call[0]).toBe('https://api.example.com/items?page=1');
+    expect(call[1]?.signal).toBeInstanceOf(AbortSignal);
+    expect((call[1]?.headers as Headers).get('X-Trace')).toBe('abc');
   });
 
-  it('throws AmuError on non-2xx in browser-like env', async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ error: 'not_found' }), {
-        status: 404,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+  it('throws AmuError on non-2xx in browser env', async () => {
+    fetchMock.mockResolvedValue(json({ error: 'not_found' }, { status: 404 }));
+    const api = createClient();
+    await expect(api.get('https://api.example.com/missing')).rejects.toBeInstanceOf(AmuError);
+  });
 
-    const amu = new Amu();
-    await expect(amu.get('https://api.example.com/missing')).rejects.toBeInstanceOf(AmuError);
+  it('runs schema validation against a Zod schema in the browser', async () => {
+    fetchMock.mockResolvedValue(json({ id: 'wrong' }));
+    const api = createClient();
+    const User = z.object({ id: z.number() });
+    await expect(
+      api.get('https://api.example.com/u', { schema: { response: User } }),
+    ).rejects.toBeInstanceOf(AmuValidationError);
   });
 });

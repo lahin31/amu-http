@@ -1,14 +1,13 @@
 {
   "name": "amu-http",
-  "version": "1.1.1",
-  "description": "A graceful, lightweight HTTP client built on Fetch.",
+  "version": "2.0.0-alpha.0",
+  "description": "The most type-safe HTTP client in JavaScript. Schema-inferred types, type-safe URL params, middleware-composable, universal.",
   "type": "module",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
+  "types": "./dist/index.d.mts",
   "sideEffects": false,
   "engines": {
-    "node": ">=18"
+    "node": ">=20.3"
   },
   "repository": {
     "type": "git",
@@ -17,15 +16,26 @@
   "homepage": "https://github.com/lahin31/amu-http#readme",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    }
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./middleware/auth": {
+      "types": "./dist/middleware/auth.d.mts",
+      "default": "./dist/middleware/auth.mjs"
+    },
+    "./middleware/requestId": {
+      "types": "./dist/middleware/requestId.d.mts",
+      "default": "./dist/middleware/requestId.mjs"
+    },
+    "./middleware/logger": {
+      "types": "./dist/middleware/logger.d.mts",
+      "default": "./dist/middleware/logger.mjs"
+    },
+    "./test": {
+      "types": "./dist/test/mock.d.mts",
+      "default": "./dist/test/mock.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -46,15 +56,9 @@
     "test:types": "vitest run --typecheck.only",
     "size": "size-limit",
     "bench": "vitest bench --run",
-    "verify": "publint && attw --pack",
+    "verify": "publint && attw --pack --ignore-rules cjs-resolves-to-esm no-resolution",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run size",
     "prepare": "simple-git-hooks",
-    "test:examples": "npm run example:get",
-    "example:get": "npm run build && tsx examples/get-users.ts",
-    "example:post": "npm run build && tsx examples/create-post.ts",
-    "example:bearer": "npm run build && tsx examples/bearer-token.ts",
-    "example:retry:safe": "npm run build && tsx examples/retry-safe-default.ts",
-    "example:retry:advanced": "npm run build && tsx examples/retry-advanced.ts",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
@@ -68,9 +72,19 @@
   "keywords": [
     "http",
     "fetch",
-    "amu",
-    "amayra",
-    "lightweight"
+    "client",
+    "typescript",
+    "type-safe",
+    "schema",
+    "zod",
+    "valibot",
+    "arktype",
+    "standard-schema",
+    "middleware",
+    "universal",
+    "edge",
+    "node",
+    "browser"
   ],
   "author": "Technext",
   "license": "MIT",
@@ -79,15 +93,37 @@
   },
   "size-limit": [
     {
-      "name": "ESM (gzip)",
+      "name": "core (createClient only)",
       "path": "dist/index.mjs",
-      "limit": "2 KB",
+      "import": "{ createClient }",
+      "limit": "3.3 KB",
       "gzip": true
     },
     {
-      "name": "CJS (gzip)",
-      "path": "dist/index.cjs",
-      "limit": "2.1 KB",
+      "name": "with all errors imported",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, AmuError, AmuNetworkError, AmuUrlError, AmuValidationError, AmuUnknownError }",
+      "limit": "3.3 KB",
+      "gzip": true
+    },
+    {
+      "name": "with SSE parser",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, parseSSE }",
+      "limit": "3.7 KB",
+      "gzip": true
+    },
+    {
+      "name": "with SSE + NDJSON parsers",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, parseSSE, parseNDJSON }",
+      "limit": "4 KB",
+      "gzip": true
+    },
+    {
+      "name": "full barrel (everything)",
+      "path": "dist/index.mjs",
+      "limit": "4 KB",
       "gzip": true
     }
   ],
@@ -106,6 +142,7 @@
     "tsdown": "^0.21.10",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.0"
   }
 }

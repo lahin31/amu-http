@@ -1,18 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.AsyncIterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "outDir": "./dist",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
     "esModuleInterop": true,
     "ignoreDeprecations": "5.0",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "paths": {
       "@/*": ["./src/*"]
     }

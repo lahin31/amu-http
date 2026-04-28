@@ -1,20 +1,36 @@
-import { createDefaultAmu } from '@/factory/createAmu';
+export { amu, createClient } from '@/client';
 
-const amu = createDefaultAmu();
-
-export { Amu } from '@/client/AmuClient';
 export { AmuError } from '@/errors/AmuError';
+export type { AmuNetworkErrorKind } from '@/errors/AmuNetworkError';
 export { AmuNetworkError } from '@/errors/AmuNetworkError';
+export { AmuUnknownError } from '@/errors/AmuUnknownError';
 export { AmuUrlError } from '@/errors/AmuUrlError';
 export { AmuValidationError } from '@/errors/AmuValidationError';
-export type { AmuHybrid } from '@/factory/createAmu';
-export { createInstance } from '@/factory/createAmu';
+export type { NdjsonErrorMode, NdjsonItem, NdjsonOptions } from '@/streaming/ndjson';
+export { parseNDJSON } from '@/streaming/ndjson';
+export type { SSEEvent } from '@/streaming/sse';
+// Streaming protocol parsers — tree-shaken when not imported.
+export { parseSSE } from '@/streaming/sse';
 export type {
-  AmuConfig,
-  AmuPromise,
-  AmuRawResponse,
-  AmuRetryConfig,
-  AmuSchema,
+  HttpMethod,
+  Middleware,
+  RequestContext,
+  ResponseContext,
+} from '@/types/middleware';
+export { defineMiddleware } from '@/types/middleware';
+export type {
+  Client,
+  ClientConfig,
+  FetchImpl,
+  InferRequestBody,
+  InferResponse,
+  RequestOptions,
+  RequestSchema,
+  RetryConfig,
+  RouteParams,
+  Schema,
+  StreamMethod,
+  StreamOptions,
 } from '@/types/public';
-export { amu };
-export default amu;
+export type { AmuAnyError, Result } from '@/types/result';
+export type { StandardSchemaV1 } from '@/types/standard-schema';

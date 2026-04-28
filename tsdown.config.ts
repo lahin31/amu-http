@@ -1,8 +1,14 @@
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm', 'cjs'],
+  entry: [
+    'src/index.ts',
+    'src/middleware/auth.ts',
+    'src/middleware/requestId.ts',
+    'src/middleware/logger.ts',
+    'src/test/mock.ts',
+  ],
+  format: ['esm'],
   dts: true,
   clean: true,
   minify: true,
