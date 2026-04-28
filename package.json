@@ -1,6 +1,6 @@
 {
   "name": "amu-http",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0",
   "description": "The most type-safe HTTP client in JavaScript. Schema-inferred types, type-safe URL params, middleware-composable, universal.",
   "type": "module",
   "module": "./dist/index.mjs",
