@@ -247,6 +247,42 @@ await amu.get('/stats', {
 });
 ```
 
+Retry lifecycle hooks (instance-level + request override):
+
+```ts
+import amu from 'amu-http';
+
+const api = amu('https://api.example.com', {
+  retries: {
+    attempts: 3,
+    delay: (attempt) => 2 ** attempt * 100,
+    retryOn: ['network-error', 429, 500, 502, 503, 504],
+  },
+  hooks: {
+    onRetry(ctx) {
+      console.log('retry', ctx.attempt, ctx.reason, ctx.delay);
+    },
+    onRetryComplete(ctx) {
+      console.log('retry-complete', ctx.success, ctx.totalRetries, ctx.totalDuration);
+    },
+  },
+});
+
+await api.get('/stats', {
+  hooks: {
+    onRetry(ctx) {
+      // Request-level hooks override same-named instance hooks.
+      console.log('request retry', ctx.attempt);
+    },
+  },
+});
+```
+
+Hook behavior:
+- `onRetry` fires each time a retry is scheduled (before backoff sleep).
+- `onRetryComplete` fires once when retry workflow finishes (final success or final failure).
+- `onRetryComplete` fires only if at least one retry happened.
+
 ---
 
 ## ❌ URL Safety

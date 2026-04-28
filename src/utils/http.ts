@@ -1,4 +1,4 @@
-import { AmuConfig, AmuRetryConfig } from '../types/public.js';
+import { AmuConfig, AmuHooks, AmuRetryConfig } from '../types/public.js';
 import { AmuError } from '../errors/AmuError.js';
 import { AmuNetworkError, AmuNetworkErrorKind } from '../errors/AmuNetworkError.js';
 import { AmuUrlError } from '../errors/AmuUrlError.js';
@@ -8,6 +8,7 @@ export interface AmuDefaults {
   timeout: number;
   headers: HeadersInit;
   retries: number | AmuRetryConfig;
+  hooks: AmuHooks;
 }
 
 export function createDefaults(config: AmuConfig): AmuDefaults {
@@ -16,6 +17,7 @@ export function createDefaults(config: AmuConfig): AmuDefaults {
     timeout: config.timeout || 10000,
     headers: { 'Content-Type': 'application/json', ...config.headers },
     retries: config.retries || 0,
+    hooks: config.hooks || {},
   };
 }
 

@@ -55,17 +55,36 @@ export class Amu {
     return Object.fromEntries(headers.entries());
   }
 
+  private toRetryReason(error: unknown): string {
+    if (error instanceof AmuError) return `http-${error.status}`;
+    if (error instanceof AmuNetworkError) return error.kind;
+    if (error instanceof Error && error.name) return error.name;
+    return 'unknown';
+  }
+
+  private safeInvoke(callback: (() => void) | undefined): void {
+    if (!callback) return;
+    try {
+      callback();
+    } catch {
+      // Hooks should not alter request success/failure semantics.
+    }
+  }
+
   request<T = unknown>(endpoint: string, options: AmuConfig & { raw: true }): AmuPromise<AmuRawResponse<T>>;
   request<T = unknown>(endpoint: string, options?: AmuConfig): AmuPromise<T>;
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T | AmuRawResponse<T>> {
     const retryPolicy = normalizeRetryPolicy(options.retries ?? this.defaults.retries);
     let finalConfig: AmuConfig = {};
+    const workflowStart = Date.now();
+    let totalRetries = 0;
 
     const execute = async (retriesLeft: number, attempt = 0): Promise<Response> => {
       const config = {
         ...this.defaults,
         ...options,
         headers: { ...this.defaults.headers, ...options.headers },
+        hooks: { ...this.defaults.hooks, ...options.hooks },
       };
       finalConfig = config;
       const requestMethod = (config.method ?? 'GET').toString().toUpperCase();
@@ -127,8 +146,34 @@ export class Amu {
           shouldRetryError(normalizedError, retryPolicy.retryOn)
         ) {
           const delayMs = retryPolicy.delay(attempt + 1, normalizedError);
+          totalRetries += 1;
+          this.safeInvoke(() =>
+            config.hooks?.onRetry?.({
+              attempt: attempt + 1,
+              maxAttempts: retryPolicy.attempts + 1,
+              delay: delayMs,
+              error: normalizedError,
+              reason: this.toRetryReason(normalizedError),
+              method: requestMethod,
+              url,
+            })
+          );
           await sleep(delayMs);
           return execute(retriesLeft - 1, attempt + 1);
+        }
+
+        if (totalRetries > 0) {
+          this.safeInvoke(() =>
+            config.hooks?.onRetryComplete?.({
+              success: false,
+              totalAttempts: attempt + 1,
+              totalRetries,
+              totalDuration: Date.now() - workflowStart,
+              error: normalizedError,
+              method: requestMethod,
+              url,
+            })
+          );
         }
         throw normalizedError;
       } finally {
@@ -138,7 +183,22 @@ export class Amu {
       }
     };
 
-    const responsePromise = execute(retryPolicy.attempts);
+    const responsePromise = execute(retryPolicy.attempts).then((response) => {
+      if (totalRetries > 0) {
+        this.safeInvoke(() =>
+          finalConfig.hooks?.onRetryComplete?.({
+            success: true,
+            totalAttempts: totalRetries + 1,
+            totalRetries,
+            totalDuration: Date.now() - workflowStart,
+            finalStatus: response.status,
+            method: ((finalConfig.method ?? 'GET').toString().toUpperCase()),
+            url: appendQueryParams(endpoint, this.defaults.baseURL, options.params),
+          })
+        );
+      }
+      return response;
+    });
 
     const parsedPromise = responsePromise.then(async (res: Response) => {
       const data = await this.parseResponseBody(res, true);
