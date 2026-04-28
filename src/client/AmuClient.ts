@@ -77,15 +77,34 @@ export class Amu {
       }
 
       this.updateLoading(1);
-      const controller = new AbortController();
+      const timeoutController = new AbortController();
+      const combinedController = new AbortController();
+      const userSignal = config.signal;
       let didTimeout = false;
+      const onTimeoutAbort = () => {
+        combinedController.abort(timeoutController.signal.reason);
+      };
+      const onUserAbort = () => {
+        combinedController.abort(userSignal?.reason);
+      };
+
+      timeoutController.signal.addEventListener('abort', onTimeoutAbort, { once: true });
+      userSignal?.addEventListener('abort', onUserAbort, { once: true });
+
+      if (timeoutController.signal.aborted) {
+        onTimeoutAbort();
+      }
+      if (userSignal?.aborted) {
+        onUserAbort();
+      }
+
       const timer = setTimeout(() => {
         didTimeout = true;
-        controller.abort();
+        timeoutController.abort();
       }, config.timeout);
 
       try {
-        const response = await fetch(url, { ...config, signal: controller.signal });
+        const response = await fetch(url, { ...config, signal: combinedController.signal });
         clearTimeout(timer);
         if (!response.ok) {
           const errorData = await this.parseResponseBody(response);
@@ -113,6 +132,8 @@ export class Amu {
         }
         throw normalizedError;
       } finally {
+        timeoutController.signal.removeEventListener('abort', onTimeoutAbort);
+        userSignal?.removeEventListener('abort', onUserAbort);
         this.updateLoading(-1);
       }
     };

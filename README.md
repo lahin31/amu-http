@@ -208,6 +208,22 @@ await amu.get('/me', {
 
 ---
 
+### Request Cancellation (AbortController)
+
+```ts
+import amu from 'amu-http';
+
+const controller = new AbortController();
+const promise = amu.get('/users', { signal: controller.signal });
+
+controller.abort();
+await promise; // throws AmuNetworkError with kind: 'abort'
+```
+
+`signal` works together with `timeout`: whichever aborts first cancels the request.
+
+---
+
 ### Timeout & Retries
 
 ```ts
