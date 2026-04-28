@@ -1,5 +1,12 @@
 # Amu
 
+[![npm version](https://img.shields.io/npm/v/amu-http.svg?logo=npm&label=npm)](https://www.npmjs.com/package/amu-http)
+[![npm downloads](https://img.shields.io/npm/dm/amu-http.svg)](https://www.npmjs.com/package/amu-http)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/amu-http?label=gzip)](https://bundlephobia.com/package/amu-http)
+[![types](https://img.shields.io/npm/types/amu-http.svg)](https://www.npmjs.com/package/amu-http)
+[![CI](https://github.com/lahin31/amu-http/actions/workflows/ci.yml/badge.svg)](https://github.com/lahin31/amu-http/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/amu-http.svg)](./LICENSE)
+
 **Amu** is a Fetch-first HTTP client for modern JavaScript and TypeScript apps.
 
 It keeps native Fetch behavior while removing the boilerplate that slows teams down in real-world systems.
@@ -379,10 +386,16 @@ Amu is ~9x smaller while keeping essential features for modern runtimes.
 ## 🛠 Development
 
 ```bash
-npm run lint
-npm run test
-npm run test:watch
-npm run test:coverage
-npm run build
-npm run dev
+npm ci                 # installs deps and registers pre-commit hook
+npm run lint           # biome check
+npm run typecheck      # tsc --noEmit
+npm test               # vitest — unit + browser + type tests
+npm run bench          # microbenchmarks
+npm run build          # tsdown → dist/
+npm run verify         # publint + attw
+npm run size           # size-limit (gzip budget)
 ```
+
+Releases are managed via [Changesets](https://github.com/changesets/changesets) — run `npx changeset` to record a version bump with any user-facing change. Publishing to npm happens automatically on merge of the generated version PR (with [npm provenance](https://docs.npmjs.com/generating-provenance-statements)).
+
+For the full development guide — tooling, test categories, CI matrix (Node 18/20/22, TypeScript 5.5/5.8/6.0, Bun, Deno, CodeQL), release workflow, JSR publishing, and code conventions — see [CONTRIBUTING.md](CONTRIBUTING.md). For security disclosures see [SECURITY.md](SECURITY.md).

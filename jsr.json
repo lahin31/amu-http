@@ -1,0 +1,13 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@lahin31/amu-http",
+  "version": "1.1.1",
+  "exports": "./src/index.ts",
+  "publish": {
+    "include": ["src/**/*.ts", "README.md", "LICENSE", "jsr.json"],
+    "exclude": ["**/*.test.ts", "**/*.test-d.ts", "**/*.bench.ts"]
+  },
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"]
+  }
+}

@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest a new capability or enhancement
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        amu-http aims to stay small and Fetch-native. Please explain the use case before proposing a specific API.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the underlying need, not a specific solution. What can't you do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Which existing APIs / workarounds have you tried? Why are they insufficient?
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API (optional)
+      render: ts
+      description: A rough sketch of how the feature would look in user code.
+
+  - type: checkboxes
+    id: tradeoffs
+    attributes:
+      label: Tradeoffs
+      description: amu-http rejects features that grow the bundle without proportional value.
+      options:
+        - label: I understand this may grow the bundle size and the maintainers may decline if the cost outweighs the benefit.
+          required: true

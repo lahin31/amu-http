@@ -1,18 +1,18 @@
-import { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema } from '../types/public.js';
+import { AmuError } from '@/errors/AmuError';
+import { AmuNetworkError } from '@/errors/AmuNetworkError';
+import { AmuUrlError } from '@/errors/AmuUrlError';
+import { AmuValidationError } from '@/errors/AmuValidationError';
+import type { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema } from '@/types/public';
 import {
+  type AmuDefaults,
   appendQueryParams,
   classifyNetworkError,
   createDefaults,
-  AmuDefaults,
   normalizeRetryPolicy,
   shouldRetryError,
   shouldRetryMethod,
   sleep,
-} from '../utils/http.js';
-import { AmuError } from '../errors/AmuError.js';
-import { AmuNetworkError } from '../errors/AmuNetworkError.js';
-import { AmuUrlError } from '../errors/AmuUrlError.js';
-import { AmuValidationError } from '../errors/AmuValidationError.js';
+} from '@/utils/http';
 
 export class Amu {
   public defaults: AmuDefaults;
@@ -55,9 +55,15 @@ export class Amu {
     return Object.fromEntries(headers.entries());
   }
 
-  request<T = unknown>(endpoint: string, options: AmuConfig & { raw: true }): AmuPromise<AmuRawResponse<T>>;
+  request<T = unknown>(
+    endpoint: string,
+    options: AmuConfig & { raw: true },
+  ): AmuPromise<AmuRawResponse<T>>;
   request<T = unknown>(endpoint: string, options?: AmuConfig): AmuPromise<T>;
-  request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T | AmuRawResponse<T>> {
+  request<T = unknown>(
+    endpoint: string,
+    options: AmuConfig = {},
+  ): AmuPromise<T | AmuRawResponse<T>> {
     const retryPolicy = normalizeRetryPolicy(options.retries ?? this.defaults.retries);
     let finalConfig: AmuConfig = {};
 
@@ -100,7 +106,7 @@ export class Amu {
             : new AmuNetworkError(
                 classifyNetworkError(err, didTimeout),
                 shouldRetryError(err, retryPolicy.retryOn),
-                err
+                err,
               );
         if (
           retriesLeft > 0 &&
@@ -121,7 +127,9 @@ export class Amu {
 
     const parsedPromise = responsePromise.then(async (res: Response) => {
       const data = await this.parseResponseBody(res, true);
-      const parsedData = options.schema ? await this.validateWithSchema<T>(options.schema, data) : (data as T);
+      const parsedData = options.schema
+        ? await this.validateWithSchema<T>(options.schema, data)
+        : (data as T);
       if (!options.raw) return parsedData;
 
       return {
@@ -134,7 +142,8 @@ export class Amu {
       } as AmuRawResponse<T>;
     }) as AmuPromise<T | AmuRawResponse<T>>;
 
-    parsedPromise.json = async <R = unknown>() => (await responsePromise).clone().json() as Promise<R>;
+    parsedPromise.json = async <R = unknown>() =>
+      (await responsePromise).clone().json() as Promise<R>;
     parsedPromise.text = async () => (await responsePromise).clone().text();
     parsedPromise.blob = async () => (await responsePromise).clone().blob();
 

@@ -1,7 +1,7 @@
-import { AmuConfig, AmuRetryConfig } from '../types/public.js';
-import { AmuError } from '../errors/AmuError.js';
-import { AmuNetworkError, AmuNetworkErrorKind } from '../errors/AmuNetworkError.js';
-import { AmuUrlError } from '../errors/AmuUrlError.js';
+import { AmuError } from '@/errors/AmuError';
+import { AmuNetworkError, type AmuNetworkErrorKind } from '@/errors/AmuNetworkError';
+import { AmuUrlError } from '@/errors/AmuUrlError';
+import type { AmuConfig, AmuRetryConfig } from '@/types/public';
 
 export interface AmuDefaults {
   baseURL: string;
@@ -35,7 +35,7 @@ export function getErrorName(err: unknown): string | undefined {
 export function appendQueryParams(
   endpoint: string,
   baseURL: string,
-  params?: AmuConfig['params']
+  params?: AmuConfig['params'],
 ): string {
   validateProtocolSlashes(endpoint);
 
@@ -73,7 +73,7 @@ export interface NormalizedRetryPolicy {
 const DEFAULT_RETRY_TARGETS: Array<number | 'network-error'> = ['network-error'];
 
 export function normalizeRetryPolicy(
-  retries: AmuConfig['retries'] | undefined
+  retries: AmuConfig['retries'] | undefined,
 ): NormalizedRetryPolicy {
   if (typeof retries === 'number') {
     return {
@@ -85,7 +85,12 @@ export function normalizeRetryPolicy(
   }
 
   if (!retries) {
-    return { attempts: 0, delay: () => 0, retryOn: DEFAULT_RETRY_TARGETS, allowNonIdempotent: false };
+    return {
+      attempts: 0,
+      delay: () => 0,
+      retryOn: DEFAULT_RETRY_TARGETS,
+      allowNonIdempotent: false,
+    };
   }
 
   return {
@@ -101,13 +106,19 @@ export function normalizeRetryPolicy(
 
 const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD']);
 
-export function shouldRetryMethod(method: string | undefined, allowNonIdempotent: boolean): boolean {
+export function shouldRetryMethod(
+  method: string | undefined,
+  allowNonIdempotent: boolean,
+): boolean {
   if (allowNonIdempotent) return true;
   const normalizedMethod = (method ?? 'GET').toUpperCase();
   return IDEMPOTENT_METHODS.has(normalizedMethod);
 }
 
-export function shouldRetryError(error: unknown, retryOn: Array<number | 'network-error'>): boolean {
+export function shouldRetryError(
+  error: unknown,
+  retryOn: Array<number | 'network-error'>,
+): boolean {
   if (error instanceof AmuNetworkError) {
     return error.isRetryable;
   }

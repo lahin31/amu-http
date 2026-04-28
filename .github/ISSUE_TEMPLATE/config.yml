@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/lahin31/amu-http/security/advisories/new
+    about: Report security issues privately — do NOT use a public issue.
+  - name: Question / discussion
+    url: https://github.com/lahin31/amu-http/discussions
+    about: Ask usage questions or discuss design ideas in Discussions.

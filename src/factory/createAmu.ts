@@ -1,5 +1,5 @@
-import { Amu } from '../client/AmuClient.js';
-import { AmuConfig } from '../types/public.js';
+import { Amu } from '@/client/AmuClient';
+import type { AmuConfig } from '@/types/public';
 
 export function createInstance(baseOrConfig?: string | AmuConfig, config: AmuConfig = {}): Amu {
   if (typeof baseOrConfig === 'string') {

@@ -1,14 +1,20 @@
-import { createDefaultAmu } from './factory/createAmu.js';
+import { createDefaultAmu } from '@/factory/createAmu';
 
 const amu = createDefaultAmu();
 
-export { Amu } from './client/AmuClient.js';
-export { createInstance } from './factory/createAmu.js';
-export { AmuError } from './errors/AmuError.js';
-export { AmuNetworkError } from './errors/AmuNetworkError.js';
-export { AmuUrlError } from './errors/AmuUrlError.js';
-export { AmuValidationError } from './errors/AmuValidationError.js';
-export type { AmuHybrid } from './factory/createAmu.js';
-export type { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema, AmuRetryConfig } from './types/public.js';
+export { Amu } from '@/client/AmuClient';
+export { AmuError } from '@/errors/AmuError';
+export { AmuNetworkError } from '@/errors/AmuNetworkError';
+export { AmuUrlError } from '@/errors/AmuUrlError';
+export { AmuValidationError } from '@/errors/AmuValidationError';
+export type { AmuHybrid } from '@/factory/createAmu';
+export { createInstance } from '@/factory/createAmu';
+export type {
+  AmuConfig,
+  AmuPromise,
+  AmuRawResponse,
+  AmuRetryConfig,
+  AmuSchema,
+} from '@/types/public';
 export { amu };
 export default amu;

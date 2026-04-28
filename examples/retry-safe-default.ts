@@ -1,13 +1,16 @@
-import amu from '../dist/index.js';
+import amu from '../dist/index.mjs';
+
+interface User {
+  id: number;
+}
 
 async function run() {
   console.log('Example: Safe default retries (network errors only)');
   console.log('Config -> retries: 2, timeout: 5000ms');
 
-  // Demo-only: fail the first request with a synthetic network error.
   const originalFetch = globalThis.fetch;
   let firstCall = true;
-  globalThis.fetch = async (...args) => {
+  globalThis.fetch = async (...args: Parameters<typeof fetch>) => {
     if (firstCall) {
       firstCall = false;
       console.log('Attempt 1 -> simulated network failure');
@@ -18,7 +21,7 @@ async function run() {
   };
 
   console.log('Sending request...');
-  const data = await amu.get('https://jsonplaceholder.typicode.com/users', {
+  const data = await amu.get<User[]>('https://jsonplaceholder.typicode.com/users', {
     retries: 2,
     timeout: 5000,
   });

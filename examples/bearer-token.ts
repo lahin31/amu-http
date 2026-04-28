@@ -1,11 +1,17 @@
-import amu from '../dist/index.js';
+import amu from '../dist/index.mjs';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
 
 async function run() {
   console.log('Example: Bearer token auth');
 
-  const token = process.env.API_TOKEN || 'your-token-here';
+  const token = process.env.API_TOKEN ?? 'your-token-here';
 
-  const profile = await amu.get('https://jsonplaceholder.typicode.com/users/1', {
+  const profile = await amu.get<User>('https://jsonplaceholder.typicode.com/users/1', {
     headers: {
       Authorization: `Bearer ${token}`,
     },

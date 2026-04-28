@@ -1,17 +1,18 @@
 # Examples
 
-Run from project root after building:
+These are TypeScript files run via [`tsx`](https://github.com/privatenumber/tsx) (no compile step). They import the built bundle from `../dist/index.mjs`, so build first.
 
 ```bash
 npm run build
-node examples/get-users.js
-node examples/create-post.js
-node examples/bearer-token.js
-node examples/retry-safe-default.js
-node examples/retry-advanced.js
+
+npx tsx examples/get-users.ts
+npx tsx examples/create-post.ts
+npx tsx examples/bearer-token.ts
+npx tsx examples/retry-safe-default.ts
+npx tsx examples/retry-advanced.ts
 ```
 
-Or use npm scripts:
+Or via npm scripts (each runs `npm run build` first):
 
 ```bash
 npm run example:get

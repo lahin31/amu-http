@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Amu } from '../../src/client/AmuClient.js';
-import { AmuError } from '../../src/errors/AmuError.js';
-import { AmuNetworkError } from '../../src/errors/AmuNetworkError.js';
+import { Amu } from '@/client/AmuClient';
+import { AmuError } from '@/errors/AmuError';
+import { AmuNetworkError } from '@/errors/AmuNetworkError';
 
 const fetchMock = vi.fn();
 
@@ -13,7 +13,11 @@ afterEach(() => {
 
 describe('Amu client', () => {
   it('parses JSON response data when awaited', async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify([{ id: 1 }]), { headers: { 'content-type': 'application/json' } }));
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify([{ id: 1 }]), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
     const amu = new Amu();
     const users = await amu.get<Array<{ id: number }>>('https://api.example.com/users');
@@ -27,7 +31,7 @@ describe('Amu client', () => {
       new Response(JSON.stringify({ message: 'not found' }), {
         status: 404,
         headers: { 'content-type': 'application/json' },
-      })
+      }),
     );
 
     const amu = new Amu();
@@ -40,7 +44,11 @@ describe('Amu client', () => {
   });
 
   it('reuses one underlying request for response readers', async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } }));
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
     const amu = new Amu();
     const req = amu.get<{ ok: boolean }>('https://api.example.com/status');
@@ -54,9 +62,11 @@ describe('Amu client', () => {
   });
 
   it('retries network errors for GET by default', async () => {
-    fetchMock
-      .mockRejectedValueOnce(new Error('temporary network issue'))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } }));
+    fetchMock.mockRejectedValueOnce(new Error('temporary network issue')).mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
     const amu = new Amu();
     const result = await amu.get<{ ok: boolean }>('https://api.example.com/retry', { retries: 1 });
@@ -71,15 +81,17 @@ describe('Amu client', () => {
     const amu = new Amu();
 
     await expect(
-      amu.post('https://api.example.com/orders', { id: 1 }, { retries: { attempts: 2 } })
+      amu.post('https://api.example.com/orders', { id: 1 }, { retries: { attempts: 2 } }),
     ).rejects.toBeInstanceOf(AmuNetworkError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('retries POST when allowNonIdempotent is explicitly enabled', async () => {
-    fetchMock
-      .mockRejectedValueOnce(new Error('temporary network issue'))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ created: true }), { headers: { 'content-type': 'application/json' } }));
+    fetchMock.mockRejectedValueOnce(new Error('temporary network issue')).mockResolvedValueOnce(
+      new Response(JSON.stringify({ created: true }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
     const amu = new Amu();
     const result = await amu.post<{ created: boolean }>(
@@ -87,7 +99,7 @@ describe('Amu client', () => {
       { id: 1 },
       {
         retries: { attempts: 1, allowNonIdempotent: true },
-      }
+      },
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -126,9 +138,13 @@ describe('Amu client', () => {
         new Response(JSON.stringify({ message: 'busy' }), {
           status: 503,
           headers: { 'content-type': 'application/json' },
-        })
+        }),
       )
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } }));
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
 
     const amu = new Amu();
     const result = await amu.get<{ ok: boolean }>('https://api.example.com/retry-http', {
@@ -141,7 +157,11 @@ describe('Amu client', () => {
 
   it('keeps activeRequests in sync via loading callback', async () => {
     const states: boolean[] = [];
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } }));
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
     const amu = new Amu({ onLoadingChange: (isLoading) => states.push(isLoading) });
     await amu.get('https://api.example.com/loading');
@@ -150,7 +170,9 @@ describe('Amu client', () => {
   });
 
   it('throws AmuError class for non-2xx responses', async () => {
-    fetchMock.mockResolvedValue(new Response('failed', { status: 500, headers: { 'content-type': 'text/plain' } }));
+    fetchMock.mockResolvedValue(
+      new Response('failed', { status: 500, headers: { 'content-type': 'text/plain' } }),
+    );
 
     const amu = new Amu();
 

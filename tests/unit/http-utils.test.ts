@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { AmuUrlError } from '@/errors/AmuUrlError';
 import {
   appendQueryParams,
   normalizeRetryPolicy,
   shouldRetryMethod,
   validateProtocolSlashes,
-} from '../../src/utils/http.js';
-import { AmuUrlError } from '../../src/errors/AmuUrlError.js';
+} from '@/utils/http';
 
 describe('http utils', () => {
   it('appends query params to clean URL', () => {

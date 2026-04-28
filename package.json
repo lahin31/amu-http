@@ -4,7 +4,12 @@
   "description": "A graceful, lightweight HTTP client built on Fetch.",
   "type": "module",
   "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lahin31/amu-http.git"
@@ -12,36 +17,53 @@
   "homepage": "https://github.com/lahin31/amu-http#readme",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./require.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
     "dist",
-    "README.md",
-    "require.cjs"
+    "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --dts --minify --clean --outDir dist",
-    "dev": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --watch --dts --outDir dist",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
+    "format": "biome format --write",
+    "format:check": "biome format",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run lint && npm run build",
+    "test:types": "vitest run --typecheck.only",
+    "size": "size-limit",
+    "bench": "vitest bench --run",
+    "verify": "publint && attw --pack",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run size",
+    "prepare": "simple-git-hooks",
     "test:examples": "npm run example:get",
-    "example:get": "npm run build && node examples/get-users.js",
-    "example:post": "npm run build && node examples/create-post.js",
-    "example:bearer": "npm run build && node examples/bearer-token.js",
-    "example:retry:safe": "npm run build && node examples/retry-safe-default.js",
-    "example:retry:advanced": "npm run build && node examples/retry-advanced.js",
-    "release": "standard-version && git push --follow-tags",
-    "publish": "npm publish",
-    "release:patch": "standard-version --release-as patch && git push --follow-tags && npm publish",
-    "release:minor": "standard-version --release-as minor && git push --follow-tags && npm publish",
-    "release:major": "standard-version --release-as major && git push --follow-tags && npm publish"
+    "example:get": "npm run build && tsx examples/get-users.ts",
+    "example:post": "npm run build && tsx examples/create-post.ts",
+    "example:bearer": "npm run build && tsx examples/bearer-token.ts",
+    "example:retry:safe": "npm run build && tsx examples/retry-safe-default.ts",
+    "example:retry:advanced": "npm run build && tsx examples/retry-advanced.ts",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": "biome check --write --no-errors-on-unmatched"
   },
   "keywords": [
     "http",
@@ -55,10 +77,35 @@
   "publishConfig": {
     "access": "public"
   },
+  "size-limit": [
+    {
+      "name": "ESM (gzip)",
+      "path": "dist/index.mjs",
+      "limit": "2 KB",
+      "gzip": true
+    },
+    {
+      "name": "CJS (gzip)",
+      "path": "dist/index.cjs",
+      "limit": "2.1 KB",
+      "gzip": true
+    }
+  ],
   "devDependencies": {
-    "standard-version": "^9.5.0",
-    "tsup": "^8.5.1",
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@biomejs/biome": "^2.4.13",
+    "@changesets/cli": "^2.31.0",
+    "@size-limit/preset-small-lib": "^12.1.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "happy-dom": "^20.9.0",
+    "lint-staged": "^16.4.0",
+    "publint": "^0.3.18",
+    "simple-git-hooks": "^2.13.1",
+    "size-limit": "^12.1.0",
+    "tinybench": "^6.0.0",
+    "tsdown": "^0.21.10",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vitest": "^1.6.0"
+    "vitest": "^3.2.4"
   }
 }

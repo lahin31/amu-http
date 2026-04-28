@@ -1,0 +1,56 @@
+name: Runtime smoke tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  bun:
+    name: Bun ${{ matrix.bun-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bun-version: [latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - run: bun install
+      - run: bun run build
+      - name: Smoke test (import + basic call)
+        run: bun run scripts/smoke.ts
+        env:
+          SMOKE_URL: https://jsonplaceholder.typicode.com/users/1
+
+  deno:
+    name: Deno ${{ matrix.deno-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        deno-version: [v2.x]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ matrix.deno-version }}
+
+      - name: Smoke test (Deno consumes built dist/index.mjs)
+        run: deno run --allow-net --allow-env scripts/smoke-deno.ts
+        env:
+          SMOKE_URL: https://jsonplaceholder.typicode.com/users/1
