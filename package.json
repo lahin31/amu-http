@@ -31,6 +31,14 @@
       "types": "./dist/middleware/logger.d.mts",
       "default": "./dist/middleware/logger.mjs"
     },
+    "./middleware/otel": {
+      "types": "./dist/middleware/otel.d.mts",
+      "default": "./dist/middleware/otel.mjs"
+    },
+    "./middleware/cookies": {
+      "types": "./dist/middleware/cookies.d.mts",
+      "default": "./dist/middleware/cookies.mjs"
+    },
     "./test": {
       "types": "./dist/test/mock.d.mts",
       "default": "./dist/test/mock.mjs"
@@ -38,6 +46,10 @@
     "./forms": {
       "types": "./dist/forms/index.d.mts",
       "default": "./dist/forms/index.mjs"
+    },
+    "./pagination": {
+      "types": "./dist/pagination/index.d.mts",
+      "default": "./dist/pagination/index.mjs"
     },
     "./package.json": "./package.json"
   },
@@ -107,6 +119,14 @@
   "publishConfig": {
     "access": "public"
   },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
   "size-limit": [
     {
       "name": "core (createClient only)",
@@ -147,6 +167,7 @@
     "@arethetypeswrong/cli": "^0.18.2",
     "@biomejs/biome": "^2.4.13",
     "@changesets/cli": "^2.31.0",
+    "@opentelemetry/api": "^1.9.1",
     "@size-limit/preset-small-lib": "^12.1.0",
     "@vitest/coverage-v8": "^3.2.4",
     "happy-dom": "^20.9.0",
