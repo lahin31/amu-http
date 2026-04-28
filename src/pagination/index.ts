@@ -11,14 +11,27 @@
  *   - `getNext(page)` — computes the input for the next `fetch` call, or
  *                       `null` to terminate iteration.
  *
+ * Optional `schema` validates each fetched page (Standard Schema-compatible);
+ * the validated value is what `getItems`/`getNext` receive.
+ *
  * Three preset shapes (`cursor`, `pageToken`, `linkHeader`) cover the most
  * common server conventions; you can also write `getItems` / `getNext` by
  * hand for custom schemes.
  */
 
+import { AmuValidationError } from '@/errors/AmuValidationError';
+import { validateSchema } from '@/middleware/validate';
+import type { Schema } from '@/types/public';
+
 export interface PaginateOptions<Page, Item, NextHint = unknown> {
   /** Fetch one page. `next` is null on the first call. */
   readonly fetch: (next: NextHint | null) => Promise<Page>;
+  /**
+   * Optional Standard Schema validating each fetched page. When provided, the
+   * raw fetch result is validated before being passed to `getItems`/`getNext`,
+   * and validation failures throw `AmuValidationError` with `target: 'response'`.
+   */
+  readonly schema?: Schema<Page>;
   /** Extract items from a page. */
   readonly getItems: (page: Page) => Iterable<Item> | AsyncIterable<Item>;
   /** Compute the next-page hint, or null to stop. */
@@ -42,13 +55,32 @@ export async function* paginate<Page, Item, NextHint = unknown>(
 ): AsyncIterableIterator<Item> {
   let next: NextHint | null = null;
   while (true) {
-    const page = await opts.fetch(next);
+    const page = await fetchAndValidate<Page, NextHint>(opts.fetch, opts.schema, next);
     for await (const item of opts.getItems(page)) {
       yield item;
     }
     next = opts.getNext(page);
     if (next === null) return;
   }
+}
+
+async function fetchAndValidate<Page, NextHint>(
+  fetcher: (next: NextHint | null) => Promise<Page>,
+  schema: Schema<Page> | undefined,
+  next: NextHint | null,
+): Promise<Page> {
+  const raw = await fetcher(next);
+  if (!schema) return raw;
+  const result = await validateSchema(schema, raw);
+  if (!result.ok) {
+    throw new AmuValidationError(
+      'response',
+      'Pagination page failed schema validation',
+      raw,
+      result.issues,
+    );
+  }
+  return result.value;
 }
 
 /**
@@ -63,11 +95,12 @@ export async function* paginate<Page, Item, NextHint = unknown>(
  */
 paginate.pages = async function* <Page, NextHint = unknown>(opts: {
   readonly fetch: (next: NextHint | null) => Promise<Page>;
+  readonly schema?: Schema<Page>;
   readonly getNext: (page: Page) => NextHint | null;
 }): AsyncIterableIterator<Page> {
   let next: NextHint | null = null;
   while (true) {
-    const page = await opts.fetch(next);
+    const page = await fetchAndValidate<Page, NextHint>(opts.fetch, opts.schema, next);
     yield page;
     next = opts.getNext(page);
     if (next === null) return;

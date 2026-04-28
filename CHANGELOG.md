@@ -2,7 +2,23 @@
 
 All notable changes to amu-http. The 2.x line is managed by [Changesets](https://github.com/changesets/changesets); add a changeset (`npx changeset`) with every user-facing PR.
 
-## 2.0.0 — _next release_
+## 2.0.0-rc.0
+
+Release candidate for v2.0. Locks the public API; pending real-user feedback before tagging stable.
+
+### Changes since 2.0.0-alpha.0
+
+- **`onAttempt` retry hook** — `RetryConfig.onAttempt(info)` fires before each retry with `{ attempt, error, delayMs }`. Async hooks awaited.
+- **`paginate({ schema })`** — page-level Standard Schema validation; `getItems`/`getNext` receive the typed value. Throws `AmuValidationError` on invalid pages.
+- **`amu-http/middleware/cache`** — RFC 9111-subset cache middleware (max-age / Expires / no-store / no-cache, ETag + Last-Modified revalidation, Vary support, custom keyFor for per-user scoping). Pluggable `CacheStore` interface; ships with `createMemoryCacheStore()`.
+- **24-test classifier matrix** — every `AmuNetworkError.kind` exercised against undici / Bun / Deno / browser error shapes, with signal-based precedence and `isRetryable` flag asserted.
+- **Competitor benchmark** — `bench/competitors.bench.ts` measures amu against ky / ofetch / redaxios / axios on the same in-process workload.
+- **Migration guides** — `docs/migration-from-{axios,ky,ofetch}.md`.
+- **Browser test environment** — `vitest.browser.config.ts` + `npm run test:browser` (Playwright Chromium). Opt-in CI via `.github/workflows/browser.yml`.
+- **Real-network smoke workflow** — `.github/workflows/real-network.yml` (manual + weekly schedule).
+- **TypeDoc API docs** — `npm run docs:api` generates HTML to `docs/api/`.
+
+## 2.0.0 — _the v2 GA, scheduled after RC feedback_
 
 ### Breaking changes (v1 → v2)
 

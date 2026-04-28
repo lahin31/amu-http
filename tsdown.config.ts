@@ -8,6 +8,7 @@ export default defineConfig({
     'src/middleware/logger.ts',
     'src/middleware/otel.ts',
     'src/middleware/cookies.ts',
+    'src/middleware/cache.ts',
     'src/test/mock.ts',
     'src/forms/index.ts',
     'src/pagination/index.ts',

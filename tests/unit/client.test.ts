@@ -177,6 +177,69 @@ describe('retry middleware (built-in)', () => {
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('fires onAttempt before each retry (skipping the initial attempt)', async () => {
+    fetchMock
+      .mockRejectedValueOnce(new TypeError('temp 1'))
+      .mockRejectedValueOnce(new TypeError('temp 2'))
+      .mockResolvedValueOnce(jsonResponse({ ok: true }));
+
+    const events: Array<{ attempt: number; delayMs: number; errorName: string }> = [];
+    const api = createClient();
+
+    const data = await api.get('https://api.example.com/x', {
+      retries: {
+        attempts: 3,
+        delay: (n) => n * 5,
+        onAttempt: ({ attempt, delayMs, error }) => {
+          events.push({
+            attempt,
+            delayMs,
+            errorName: (error as Error).name,
+          });
+        },
+      },
+    });
+
+    expect(data).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(events).toEqual([
+      { attempt: 2, delayMs: 5, errorName: 'AmuNetworkError' }, // 1st failure → about to do retry #2
+      { attempt: 3, delayMs: 10, errorName: 'AmuNetworkError' }, // 2nd failure → about to do retry #3
+    ]);
+  });
+
+  it('awaits async onAttempt before retrying', async () => {
+    fetchMock
+      .mockRejectedValueOnce(new TypeError('temp'))
+      .mockResolvedValueOnce(jsonResponse({ ok: true }));
+
+    const seen: number[] = [];
+    const api = createClient();
+
+    await api.get('https://api.example.com/x', {
+      retries: {
+        attempts: 1,
+        delay: () => 0,
+        onAttempt: async ({ attempt }) => {
+          await new Promise((r) => setTimeout(r, 5));
+          seen.push(attempt);
+        },
+      },
+    });
+
+    expect(seen).toEqual([2]);
+  });
+
+  it('does not fire onAttempt when no retries occur', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+    const onAttempt = vi.fn();
+    const api = createClient();
+    await api.get('https://api.example.com/x', {
+      retries: { attempts: 3, onAttempt },
+    });
+    expect(onAttempt).not.toHaveBeenCalled();
+  });
 });
 
 describe('user middleware', () => {

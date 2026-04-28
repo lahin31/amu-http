@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
+import { AmuValidationError } from '@/index';
 import { cursor, pageToken, paginate, parseLinkHeader } from '@/pagination/index';
 
 interface CursorPage {
@@ -135,6 +137,76 @@ describe('pageToken() preset', () => {
       // drain
     }
     expect(calls).toEqual([null, { pageToken: 'tok2' }]);
+  });
+});
+
+describe('paginate() with schema', () => {
+  const PageSchema = z.object({
+    items: z.array(z.object({ id: z.number() })),
+    nextCursor: z.string().optional(),
+  });
+
+  type Page = z.infer<typeof PageSchema>;
+
+  it('validates each fetched page and yields typed items', async () => {
+    const fetch = vi
+      .fn<(next: { cursor: string } | null) => Promise<Page>>()
+      .mockResolvedValueOnce({ items: [{ id: 1 }], nextCursor: 'p2' })
+      .mockResolvedValueOnce({ items: [{ id: 2 }], nextCursor: undefined });
+
+    const items: { id: number }[] = [];
+    for await (const item of paginate({
+      fetch,
+      schema: PageSchema,
+      getItems: (p) => p.items,
+      getNext: (p) => (p.nextCursor ? { cursor: p.nextCursor } : null),
+    })) {
+      items.push(item);
+    }
+
+    expect(items).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws AmuValidationError when a page fails validation', async () => {
+    const fetch = vi
+      .fn<(next: { cursor: string } | null) => Promise<Page>>()
+      .mockResolvedValueOnce({ items: [{ id: 1 }], nextCursor: 'p2' })
+      // @ts-expect-error — deliberately bad shape to exercise runtime guard
+      .mockResolvedValueOnce({ items: [{ id: 'BAD' }] });
+
+    const got: unknown[] = [];
+    await expect(
+      (async () => {
+        for await (const item of paginate({
+          fetch,
+          schema: PageSchema,
+          getItems: (p) => p.items,
+          getNext: (p) => (p.nextCursor ? { cursor: p.nextCursor } : null),
+        })) {
+          got.push(item);
+        }
+      })(),
+    ).rejects.toBeInstanceOf(AmuValidationError);
+
+    expect(got).toEqual([{ id: 1 }]);
+  });
+
+  it('paginate.pages also validates against schema', async () => {
+    const fetch = vi
+      .fn<(next: { cursor: string } | null) => Promise<Page>>()
+      .mockResolvedValueOnce({ items: [{ id: 1 }], nextCursor: undefined });
+
+    const pages: Page[] = [];
+    for await (const page of paginate.pages({
+      fetch,
+      schema: PageSchema,
+      getNext: (p) => (p.nextCursor ? { cursor: p.nextCursor } : null),
+    })) {
+      pages.push(page);
+    }
+
+    expect(pages).toEqual([{ items: [{ id: 1 }], nextCursor: undefined }]);
   });
 });
 

@@ -12,6 +12,7 @@ interface NormalizedPolicy {
   readonly delay: (attempt: number, error: unknown) => number;
   readonly retryOn: ReadonlyArray<number | 'network-error'>;
   readonly allowNonIdempotent: boolean;
+  readonly onAttempt?: NonNullable<RetryConfig['onAttempt']>;
 }
 
 export function normalizeRetryPolicy(input: number | RetryConfig | undefined): NormalizedPolicy {
@@ -41,6 +42,7 @@ export function normalizeRetryPolicy(input: number | RetryConfig | undefined): N
           : () => 0,
     retryOn: input.retryOn?.length ? input.retryOn : DEFAULT_RETRY_TARGETS,
     allowNonIdempotent: input.allowNonIdempotent ?? false,
+    onAttempt: input.onAttempt,
   };
 }
 
@@ -75,9 +77,13 @@ export function retry(defaultInput?: number | RetryConfig): Middleware {
             shouldRetryMethod(ctx.method, policy.allowNonIdempotent) &&
             shouldRetryError(err, policy.retryOn)
           ) {
-            const wait = policy.delay(attempt, err);
-            if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-            attempt += 1;
+            const delayMs = policy.delay(attempt, err);
+            const nextAttempt = attempt + 1;
+            if (policy.onAttempt) {
+              await policy.onAttempt({ attempt: nextAttempt, error: err, delayMs });
+            }
+            if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+            attempt = nextAttempt;
             remaining -= 1;
             continue;
           }

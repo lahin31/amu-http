@@ -29,12 +29,28 @@ export interface RequestSchema<TBody = unknown, TResponse = unknown> {
  */
 export type FetchImpl = (input: string | URL, init?: RequestInit) => Promise<Response>;
 
+/** Information passed to the `onAttempt` retry hook before each retry. */
+export interface RetryAttemptInfo {
+  /** 1-indexed retry count (the FIRST retry is `attempt: 2` because attempt 1 was the initial). */
+  readonly attempt: number;
+  /** The error that triggered this retry. */
+  readonly error: unknown;
+  /** Milliseconds amu will sleep before issuing the retry. */
+  readonly delayMs: number;
+}
+
 /** Configuration for the request retry built-in middleware. */
 export interface RetryConfig {
   readonly attempts: number;
   readonly delay?: number | ((attempt: number, error: unknown) => number);
   readonly retryOn?: ReadonlyArray<number | 'network-error'>;
   readonly allowNonIdempotent?: boolean;
+  /**
+   * Hook fired *before* each retry attempt (not before the initial attempt).
+   * Use for telemetry, structured logging, or aborting via the request signal.
+   * Async hooks are awaited.
+   */
+  readonly onAttempt?: (info: RetryAttemptInfo) => void | Promise<void>;
 }
 
 /** Top-level client configuration. */

@@ -27,6 +27,7 @@ export type {
   QuerySerializer,
   RequestOptions,
   RequestSchema,
+  RetryAttemptInfo,
   RetryConfig,
   RouteParams,
   Schema,
