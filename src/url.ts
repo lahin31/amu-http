@@ -1,4 +1,6 @@
 import { AmuUrlError } from '@/errors/AmuUrlError';
+import { serializeQuery } from '@/query';
+import type { QuerySerializer } from '@/types/public';
 
 /** Detects `http:`/`https:` not followed by `//` — a common copy-paste typo. */
 const MALFORMED_PROTOCOL = /^https?:[^/]/i;
@@ -44,18 +46,17 @@ export function resolveUrl(path: string, baseURL: string | undefined): string {
   return baseURL + path;
 }
 
-/** Append query params to a URL, preserving any existing query string. */
+/**
+ * Append query params to a URL via the configured serializer (flat / qs / custom),
+ * preserving any existing query string in the URL.
+ */
 export function appendQuery(
   url: string,
-  query: Readonly<Record<string, string | number | boolean | null | undefined>> | undefined,
+  query: Readonly<Record<string, unknown>> | undefined,
+  serializer?: QuerySerializer,
 ): string {
   if (!query) return url;
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined || value === null) continue;
-    search.set(key, String(value));
-  }
-  const serialized = search.toString();
+  const serialized = serializeQuery(query, serializer);
   if (!serialized) return url;
   return url + (url.includes('?') ? '&' : '?') + serialized;
 }
@@ -65,9 +66,10 @@ export function buildUrl(args: {
   path: string;
   baseURL: string | undefined;
   params: Readonly<Record<string, string | number>> | undefined;
-  query: Readonly<Record<string, string | number | boolean | null | undefined>> | undefined;
+  query: Readonly<Record<string, unknown>> | undefined;
+  serializer?: QuerySerializer;
 }): string {
   const interpolated = interpolateParams(args.path, args.params);
   const resolved = resolveUrl(interpolated, args.baseURL);
-  return appendQuery(resolved, args.query);
+  return appendQuery(resolved, args.query, args.serializer);
 }

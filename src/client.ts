@@ -90,6 +90,7 @@ export function createClient(config: ClientConfig = {}): Client {
       baseURL,
       params,
       query: opts.query,
+      serializer: config.querySerializer,
     });
 
     const headers = mergeHeaders(defaultHeaders, opts.headers);
@@ -165,6 +166,20 @@ export function createClient(config: ClientConfig = {}): Client {
     patch: wrapSafeBody(patch),
   });
 
+  /**
+   * Build a child client that inherits this one's config + middleware.
+   *   - baseURL/timeout/retries/fetch/querySerializer: overrides win
+   *   - headers: merged (overrides win on key conflict)
+   *   - middleware: parent's appended-then-extension's (extension is inner)
+   */
+  const extend = (overrides: ClientConfig): Client =>
+    createClient({
+      ...config,
+      ...overrides,
+      headers: mergeHeaders(config.headers, overrides.headers),
+      middleware: [...userMiddleware, ...(overrides.middleware ?? [])],
+    });
+
   // Cast at the public boundary — internally everything is `unknown`, the type
   // signatures in `Client` express the inferred narrowing for callers.
   return Object.freeze({
@@ -177,6 +192,7 @@ export function createClient(config: ClientConfig = {}): Client {
     patch,
     stream,
     safe,
+    extend,
   }) as unknown as Client;
 }
 

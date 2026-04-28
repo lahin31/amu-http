@@ -45,13 +45,13 @@ export interface ClientConfig {
   readonly retries?: number | RetryConfig;
   readonly middleware?: ReadonlyArray<Middleware>;
   readonly fetch?: FetchImpl;
-  readonly query?: 'flat';
+  readonly querySerializer?: QuerySerializer;
 }
 
 /** Per-request options shared by all methods. */
 export interface RequestOptions<S extends RequestSchema = RequestSchema> {
   readonly headers?: HeadersInit;
-  readonly query?: Readonly<Record<string, string | number | boolean | null | undefined>>;
+  readonly query?: Readonly<Record<string, unknown>>;
   readonly signal?: AbortSignal;
   readonly timeout?: number;
   readonly retries?: number | RetryConfig;
@@ -163,4 +163,29 @@ export interface Client {
     readonly put: SafeBodyMethod;
     readonly patch: SafeBodyMethod;
   };
+  /**
+   * Create a new client that inherits this one's config and middleware,
+   * applying overrides on top. Headers are merged; middleware is appended
+   * (extension middleware sits inside parent middleware in the onion); other
+   * fields override.
+   *
+   * @example
+   *   const api    = createClient({ baseURL: 'https://api.example.com' });
+   *   const authed = api.extend({ middleware: [bearerAuth(token)] });
+   *   const v2     = api.extend({ baseURL: 'https://api.example.com/v2' });
+   */
+  readonly extend: (overrides: ClientConfig) => Client;
 }
+
+/**
+ * Query string serializer.
+ *
+ *   'flat' — `{ a: 1, b: [1, 2] }` → `a=1&b=1%2C2` (comma-joined arrays).
+ *   'qs'   — bracketed nested syntax, like `qs.stringify`:
+ *            `{ filter: { status: 'a' } }` → `filter[status]=a`.
+ *   custom — full control: receives the raw query object, returns the string.
+ */
+export type QuerySerializer =
+  | 'flat'
+  | 'qs'
+  | ((query: Readonly<Record<string, unknown>>) => string);

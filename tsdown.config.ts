@@ -7,6 +7,7 @@ export default defineConfig({
     'src/middleware/requestId.ts',
     'src/middleware/logger.ts',
     'src/test/mock.ts',
+    'src/forms/index.ts',
   ],
   format: ['esm'],
   dts: true,

@@ -35,6 +35,10 @@
       "types": "./dist/test/mock.d.mts",
       "default": "./dist/test/mock.mjs"
     },
+    "./forms": {
+      "types": "./dist/forms/index.d.mts",
+      "default": "./dist/forms/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -96,34 +100,34 @@
       "name": "core (createClient only)",
       "path": "dist/index.mjs",
       "import": "{ createClient }",
-      "limit": "3.3 KB",
+      "limit": "3.5 KB",
       "gzip": true
     },
     {
       "name": "with all errors imported",
       "path": "dist/index.mjs",
       "import": "{ createClient, AmuError, AmuNetworkError, AmuUrlError, AmuValidationError, AmuUnknownError }",
-      "limit": "3.3 KB",
+      "limit": "3.5 KB",
       "gzip": true
     },
     {
       "name": "with SSE parser",
       "path": "dist/index.mjs",
       "import": "{ createClient, parseSSE }",
-      "limit": "3.7 KB",
+      "limit": "3.9 KB",
       "gzip": true
     },
     {
       "name": "with SSE + NDJSON parsers",
       "path": "dist/index.mjs",
       "import": "{ createClient, parseSSE, parseNDJSON }",
-      "limit": "4 KB",
+      "limit": "4.2 KB",
       "gzip": true
     },
     {
       "name": "full barrel (everything)",
       "path": "dist/index.mjs",
-      "limit": "4 KB",
+      "limit": "4.2 KB",
       "gzip": true
     }
   ],

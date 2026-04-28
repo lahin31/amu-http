@@ -24,6 +24,7 @@ export type {
   FetchImpl,
   InferRequestBody,
   InferResponse,
+  QuerySerializer,
   RequestOptions,
   RequestSchema,
   RetryConfig,
