@@ -2,6 +2,16 @@
 
 Thanks for your interest. This document covers everything needed to develop, test, and ship the package.
 
+## Read this first
+
+Before making non-trivial changes, skim:
+
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — the contract beneath the implementation: module layering, principles, lifecycle, public/internal split.
+- **[docs/adrs/](./docs/adrs/)** — Architecture Decision Records explaining *why* we made the choices we did. Required reading before proposing architectural changes.
+- **[docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md)** — what amu defends and doesn't defend; relevant for any security-adjacent change.
+- **[docs/PLUGIN_AUTHORING.md](./docs/PLUGIN_AUTHORING.md)** — if you're writing third-party middleware to publish on npm.
+- **[docs/QUALITY_BAR.md](./docs/QUALITY_BAR.md)** — the bar for `@amu-http/*` adjacent packages.
+
 For security issues, see [SECURITY.md](SECURITY.md) — **do not** file public issues for vulnerabilities.
 
 ---
