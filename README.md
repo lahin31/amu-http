@@ -57,6 +57,205 @@ if (!result.ok) {
     case 'AmuUrlError':         // malformed URL caught locally
     case 'AmuValidationError':  // schema mismatch — `.target: 'request' | 'response'`, `.issues`
     case 'AmuUnknownError':     // catch-all for non-amu errors thrown by middleware
+const users = await amu.get('https://jsonplaceholder.typicode.com/users');
+```
+
+---
+
+### Axios-style Raw Response
+
+If you prefer Axios-like response objects, pass `raw: true`.
+
+```ts
+import amu from 'amu-http';
+
+const res = await amu.get('/users', { raw: true });
+
+console.log(res.data); // parsed payload
+console.log(res.status); // HTTP status code
+console.log(res.statusText); // HTTP status text
+console.log(res.headers); // plain header object
+console.log(res.config); // resolved request config
+console.log(res.request); // native Fetch Response
+```
+
+With schema validation, `res.data` is still validated:
+
+```ts
+const res = await amu.get('/user/1', {
+  raw: true,
+  schema: UserSchema,
+});
+```
+
+---
+
+### POST (JSON)
+
+```ts
+import amu from 'amu-http';
+
+await amu.post('/posts', {
+  title: 'hello',
+  body: 'from amu',
+});
+```
+
+---
+
+### PUT / PATCH / DELETE
+
+```ts
+import amu from 'amu-http';
+
+await amu.put('/users/1', { name: 'Updated Name' });
+await amu.patch('/users/1', { role: 'admin' });
+await amu.delete('/users/1');
+```
+
+---
+
+### Query Params
+
+```ts
+import amu from 'amu-http';
+
+await amu.get('/users', {
+  params: { page: 1, limit: 10 },
+});
+```
+
+You can also pass query params directly in the URL:
+
+```ts
+const users = await amu.get('/users?page=1&limit=10');
+```
+
+Mixing URL query + `params` also works:
+
+```ts
+await amu.get('/users?page=1', {
+  params: { limit: 10 },
+});
+// Final URL: /users?page=1&limit=10
+```
+
+---
+
+### Headers / Auth
+
+```ts
+import amu from 'amu-http';
+
+await amu.get('/me', {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+```
+
+---
+
+### Request Cancellation (AbortController)
+
+```ts
+import amu from 'amu-http';
+
+const controller = new AbortController();
+const promise = amu.get('/users', { signal: controller.signal });
+
+controller.abort();
+await promise; // throws AmuNetworkError with kind: 'abort'
+```
+
+`signal` works together with `timeout`: whichever aborts first cancels the request.
+
+---
+
+### Timeout & Retries
+
+```ts
+import amu from 'amu-http';
+
+await amu.get('/stats', {
+  timeout: 5000,
+  retries: 2,
+});
+```
+
+Advanced retry:
+
+```ts
+await amu.get('/stats', {
+  retries: {
+    attempts: 3,
+    delay: (attempt) => 2 ** attempt * 100,
+    retryOn: ['network-error', 429, 500, 502, 503, 504],
+  },
+});
+```
+
+Retry lifecycle hooks (instance-level + request override):
+
+```ts
+import amu from 'amu-http';
+
+const api = amu('https://api.example.com', {
+  retries: {
+    attempts: 3,
+    delay: (attempt) => 2 ** attempt * 100,
+    retryOn: ['network-error', 429, 500, 502, 503, 504],
+  },
+  hooks: {
+    onRetry(ctx) {
+      console.log('retry', ctx.attempt, ctx.reason, ctx.delay);
+    },
+    onRetryComplete(ctx) {
+      console.log('retry-complete', ctx.success, ctx.totalRetries, ctx.totalDuration);
+    },
+  },
+});
+
+await api.get('/stats', {
+  hooks: {
+    onRetry(ctx) {
+      // Request-level hooks override same-named instance hooks.
+      console.log('request retry', ctx.attempt);
+    },
+  },
+});
+```
+
+Hook behavior:
+- `onRetry` fires each time a retry is scheduled (before backoff sleep).
+- `onRetryComplete` fires once when retry workflow finishes (final success or final failure).
+- `onRetryComplete` fires only if at least one retry happened.
+
+---
+
+## ❌ URL Safety
+
+Amu performs strict URL parsing (syntax-level validation only) and rejects malformed absolute URLs.
+
+```ts
+await amu.get('https:google.com'); // throws AmuUrlError
+await amu.get('https://google.com'); // valid
+```
+
+---
+
+## ⚠️ Error Handling
+
+```ts
+import amu, { AmuError } from 'amu-http';
+
+try {
+  await amu.get('/404');
+} catch (err) {
+  if (err instanceof AmuError) {
+    console.log(err.status);
+    console.log(err.data);
+    console.log(err.headers);
   }
   // TypeScript errors if you miss a case.
 }
