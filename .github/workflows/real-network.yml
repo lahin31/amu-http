@@ -1,0 +1,59 @@
+name: Real-network smoke tests
+
+# Manual trigger only — these tests hit the public network and would flake
+# the regular CI matrix on every PR. Trigger from the Actions tab when you
+# want a real-runtime confidence check before tagging a release.
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly on Monday 08:00 UTC, so regression catches don't lag.
+    - cron: '0 8 * * 1'
+
+jobs:
+  smoke:
+    name: Real-network smoke (${{ matrix.runtime }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [node, bun, deno]
+    steps:
+      - uses: actions/checkout@v4
+
+      - if: matrix.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - if: matrix.runtime == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - if: matrix.runtime == 'deno'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: matrix.runtime == 'deno'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - if: matrix.runtime != 'bun'
+        run: npm ci
+      - if: matrix.runtime == 'bun'
+        run: bun install
+
+      - run: npm run build
+        if: matrix.runtime != 'bun'
+      - run: bun run build
+        if: matrix.runtime == 'bun'
+
+      - if: matrix.runtime == 'node'
+        run: npx tsx scripts/smoke.ts
+      - if: matrix.runtime == 'bun'
+        run: bun run scripts/smoke.ts
+      - if: matrix.runtime == 'deno'
+        run: deno run --allow-net --allow-env --allow-read scripts/smoke-deno.ts

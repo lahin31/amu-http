@@ -1,0 +1,32 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "amu-http",
+  "entryPoints": [
+    "src/index.ts",
+    "src/middleware/auth.ts",
+    "src/middleware/requestId.ts",
+    "src/middleware/logger.ts",
+    "src/middleware/otel.ts",
+    "src/middleware/cookies.ts",
+    "src/middleware/cache.ts",
+    "src/test/mock.ts",
+    "src/forms/index.ts",
+    "src/pagination/index.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs/api",
+  "readme": "README.md",
+  "tsconfig": "tsconfig.json",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/lahin31/amu-http",
+    "npm": "https://www.npmjs.com/package/amu-http",
+    "Migration guides": "https://github.com/lahin31/amu-http/tree/main/docs"
+  },
+  "sidebarLinks": {},
+  "githubPages": false,
+  "skipErrorChecking": false
+}

@@ -1,10 +1,14 @@
 {
   "name": "amu-http",
-  "version": "1.1.2",
-  "description": "A graceful, lightweight HTTP client built on Fetch.",
+  "version": "2.0.0-rc.0",
+  "description": "The most type-safe HTTP client in JavaScript. Schema-inferred types, type-safe URL params, middleware-composable, universal.",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lahin31/amu-http.git"
@@ -12,53 +16,183 @@
   "homepage": "https://github.com/lahin31/amu-http#readme",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./require.cjs"
-    }
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./middleware/auth": {
+      "types": "./dist/middleware/auth.d.mts",
+      "default": "./dist/middleware/auth.mjs"
+    },
+    "./middleware/requestId": {
+      "types": "./dist/middleware/requestId.d.mts",
+      "default": "./dist/middleware/requestId.mjs"
+    },
+    "./middleware/logger": {
+      "types": "./dist/middleware/logger.d.mts",
+      "default": "./dist/middleware/logger.mjs"
+    },
+    "./middleware/otel": {
+      "types": "./dist/middleware/otel.d.mts",
+      "default": "./dist/middleware/otel.mjs"
+    },
+    "./middleware/cookies": {
+      "types": "./dist/middleware/cookies.d.mts",
+      "default": "./dist/middleware/cookies.mjs"
+    },
+    "./middleware/cache": {
+      "types": "./dist/middleware/cache.d.mts",
+      "default": "./dist/middleware/cache.mjs"
+    },
+    "./test": {
+      "types": "./dist/test/mock.d.mts",
+      "default": "./dist/test/mock.mjs"
+    },
+    "./forms": {
+      "types": "./dist/forms/index.d.mts",
+      "default": "./dist/forms/index.mjs"
+    },
+    "./pagination": {
+      "types": "./dist/pagination/index.d.mts",
+      "default": "./dist/pagination/index.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "README.md",
-    "require.cjs"
+    "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --dts --minify --clean --outDir dist",
-    "dev": "tsup src/index.ts --tsconfig tsconfig.build.json --format cjs,esm --watch --dts --outDir dist",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
+    "format": "biome format --write",
+    "format:check": "biome format",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run lint && npm run build",
-    "test:examples": "npm run example:get",
-    "example:get": "npm run build && node examples/get-users.js",
-    "example:post": "npm run build && node examples/create-post.js",
-    "example:bearer": "npm run build && node examples/bearer-token.js",
-    "example:retry:safe": "npm run build && node examples/retry-safe-default.js",
-    "example:retry:advanced": "npm run build && node examples/retry-advanced.js",
-    "release": "standard-version && git push --follow-tags",
-    "publish": "npm publish",
-    "release:patch": "standard-version --release-as patch && git push --follow-tags && npm publish",
-    "release:minor": "standard-version --release-as minor && git push --follow-tags && npm publish",
-    "release:major": "standard-version --release-as major && git push --follow-tags && npm publish"
+    "test:types": "vitest run --typecheck.only",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "docs:api": "typedoc",
+    "size": "size-limit",
+    "bench": "vitest bench --run",
+    "verify": "publint && attw --pack --ignore-rules cjs-resolves-to-esm no-resolution",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run size",
+    "prepare": "simple-git-hooks",
+    "examples": "for f in examples/*.ts; do echo \"\\n— $f —\"; npx tsx \"$f\"; done",
+    "example:get": "tsx examples/01-basic-get.ts",
+    "example:schema": "tsx examples/02-schema-inference.ts",
+    "example:params": "tsx examples/03-typed-url-params.ts",
+    "example:body": "tsx examples/04-validated-body.ts",
+    "example:errors": "tsx examples/05-discriminated-errors.ts",
+    "example:retries": "tsx examples/06-retries.ts",
+    "example:auth": "tsx examples/07-middleware-auth.ts",
+    "example:sse": "tsx examples/08-streaming-sse.ts",
+    "example:ndjson": "tsx examples/09-streaming-ndjson.ts",
+    "example:mock": "tsx examples/10-mock-client-testing.ts",
+    "example:extend": "tsx examples/11-extend-and-forms.ts",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": "biome check --write --no-errors-on-unmatched"
   },
   "keywords": [
     "http",
     "fetch",
-    "amu",
-    "amayra",
-    "lightweight"
+    "client",
+    "typescript",
+    "type-safe",
+    "schema",
+    "zod",
+    "valibot",
+    "arktype",
+    "standard-schema",
+    "middleware",
+    "universal",
+    "edge",
+    "node",
+    "browser"
   ],
   "author": "Technext",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
+  "size-limit": [
+    {
+      "name": "core (createClient only)",
+      "path": "dist/index.mjs",
+      "import": "{ createClient }",
+      "limit": "3.5 KB",
+      "gzip": true
+    },
+    {
+      "name": "with all errors imported",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, AmuError, AmuNetworkError, AmuUrlError, AmuValidationError, AmuUnknownError }",
+      "limit": "3.5 KB",
+      "gzip": true
+    },
+    {
+      "name": "with SSE parser",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, parseSSE }",
+      "limit": "3.9 KB",
+      "gzip": true
+    },
+    {
+      "name": "with SSE + NDJSON parsers",
+      "path": "dist/index.mjs",
+      "import": "{ createClient, parseSSE, parseNDJSON }",
+      "limit": "4.2 KB",
+      "gzip": true
+    },
+    {
+      "name": "full barrel (everything)",
+      "path": "dist/index.mjs",
+      "limit": "4.2 KB",
+      "gzip": true
+    }
+  ],
   "devDependencies": {
-    "standard-version": "^9.5.0",
-    "tsup": "^8.5.1",
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@biomejs/biome": "^2.4.13",
+    "@changesets/cli": "^2.31.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@size-limit/preset-small-lib": "^12.1.0",
+    "@vitest/browser": "^4.1.5",
+    "@vitest/coverage-v8": "^3.2.4",
+    "axios": "^1.15.2",
+    "happy-dom": "^20.9.0",
+    "ky": "^2.0.2",
+    "lint-staged": "^16.4.0",
+    "ofetch": "^1.5.1",
+    "playwright": "^1.59.1",
+    "publint": "^0.3.18",
+    "redaxios": "^0.5.1",
+    "simple-git-hooks": "^2.13.1",
+    "size-limit": "^12.1.0",
+    "tinybench": "^6.0.0",
+    "tsdown": "^0.21.10",
+    "tsx": "^4.21.0",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
-    "vitest": "^1.6.0"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.0"
   }
 }

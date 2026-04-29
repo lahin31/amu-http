@@ -1,14 +1,38 @@
-import { createDefaultAmu } from './factory/createAmu.js';
+export { amu, createClient } from '@/client';
 
-const amu = createDefaultAmu();
-
-export { Amu } from './client/AmuClient.js';
-export { createInstance } from './factory/createAmu.js';
-export { AmuError } from './errors/AmuError.js';
-export { AmuNetworkError } from './errors/AmuNetworkError.js';
-export { AmuUrlError } from './errors/AmuUrlError.js';
-export { AmuValidationError } from './errors/AmuValidationError.js';
-export type { AmuHybrid } from './factory/createAmu.js';
-export type { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema, AmuRetryConfig } from './types/public.js';
-export { amu };
-export default amu;
+export { AmuError } from '@/errors/AmuError';
+export type { AmuNetworkErrorKind } from '@/errors/AmuNetworkError';
+export { AmuNetworkError } from '@/errors/AmuNetworkError';
+export { AmuUnknownError } from '@/errors/AmuUnknownError';
+export { AmuUrlError } from '@/errors/AmuUrlError';
+export { AmuValidationError } from '@/errors/AmuValidationError';
+export type { NdjsonErrorMode, NdjsonItem, NdjsonOptions } from '@/streaming/ndjson';
+export { parseNDJSON } from '@/streaming/ndjson';
+export type { SSEEvent } from '@/streaming/sse';
+// Streaming protocol parsers — tree-shaken when not imported.
+export { parseSSE } from '@/streaming/sse';
+export type {
+  HttpMethod,
+  Middleware,
+  RequestContext,
+  ResponseContext,
+} from '@/types/middleware';
+export { defineMiddleware } from '@/types/middleware';
+export type {
+  Client,
+  ClientConfig,
+  FetchImpl,
+  InferRequestBody,
+  InferResponse,
+  QuerySerializer,
+  RequestOptions,
+  RequestSchema,
+  RetryAttemptInfo,
+  RetryConfig,
+  RouteParams,
+  Schema,
+  StreamMethod,
+  StreamOptions,
+} from '@/types/public';
+export type { AmuAnyError, Result } from '@/types/result';
+export type { StandardSchemaV1 } from '@/types/standard-schema';

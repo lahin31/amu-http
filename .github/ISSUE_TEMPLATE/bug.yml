@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a defect in amu-http
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill out as much of the form as you can — minimal repros get fixed first.
+
+  - type: input
+    id: version
+    attributes:
+      label: amu-http version
+      placeholder: "e.g. 1.1.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Node.js
+        - Browser
+        - Cloudflare Workers
+        - Vercel Edge
+        - Deno
+        - Bun
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime version
+      placeholder: "e.g. Node 20.11.0, Chrome 124, Bun 1.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A short snippet, gist, or link to a CodeSandbox/StackBlitz that reproduces the issue.
+      render: ts
+      placeholder: |
+        import amu from 'amu-http';
+
+        await amu.get('https://...');
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error message, error class name, and `cause` if available.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Anything else relevant — workarounds you've tried, related issues, screenshots.

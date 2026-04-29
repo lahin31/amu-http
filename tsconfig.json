@@ -1,18 +1,24 @@
 {
-    "compilerOptions": {
-      "target": "ESNext",
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext",
-      "declaration": true,
-      "declarationMap": true,
-      "sourceMap": true,
-      "outDir": "./dist",
-      "strict": true,
-      "esModuleInterop": true,
-      "ignoreDeprecations": "5.0",
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
-      "isolatedModules": true,
-    },
-    "include": ["src/**/*.ts"]
-  }
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.AsyncIterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "declaration": true,
+    "outDir": "./dist",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "esModuleInterop": true,
+    "ignoreDeprecations": "5.0",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "bench/**/*.ts"],
+  "exclude": ["dist", "node_modules", "examples", "scripts"]
+}
