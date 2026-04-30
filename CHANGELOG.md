@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.3](https://github.com/lahin31/amu-http/compare/v1.1.2...v1.1.3) (2026-04-30)
+
+
+### Features
+
+* debug latency feature ([1a3283b](https://github.com/lahin31/amu-http/commit/1a3283b849d58463890975a462e863d6fab757ec))
+
 ### [1.1.2](https://github.com/lahin31/amu-http/compare/v1.1.1...v1.1.2) (2026-04-28)
 
 
