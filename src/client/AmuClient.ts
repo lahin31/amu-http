@@ -1,14 +1,14 @@
-import { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema } from '../types/public.js';
+import type { AmuConfig, AmuPromise, AmuRawResponse, AmuSchema } from '../types/public.js';
 import {
   appendQueryParams,
   classifyNetworkError,
   createDefaults,
-  AmuDefaults,
   normalizeRetryPolicy,
   shouldRetryError,
   shouldRetryMethod,
   sleep,
 } from '../utils/http.js';
+import type { AmuDefaults } from '../utils/http.js';
 import { AmuError } from '../errors/AmuError.js';
 import { AmuNetworkError } from '../errors/AmuNetworkError.js';
 import { AmuUrlError } from '../errors/AmuUrlError.js';
@@ -71,6 +71,19 @@ export class Amu {
     }
   }
 
+  private logLatency(
+    config: AmuConfig,
+    payload: { method: string; url: string; duration: number; attempts: number; status?: number; error?: unknown }
+  ): void {
+    if (!config.debug) return;
+    const base = `[amu][latency] ${payload.method} ${payload.url} ${payload.duration}ms attempts=${payload.attempts}`;
+    if (typeof payload.status === 'number') {
+      console.info(`${base} status=${payload.status}`);
+      return;
+    }
+    console.info(`${base} error=${this.toRetryReason(payload.error)}`);
+  }
+
   request<T = unknown>(endpoint: string, options: AmuConfig & { raw: true }): AmuPromise<AmuRawResponse<T>>;
   request<T = unknown>(endpoint: string, options?: AmuConfig): AmuPromise<T>;
   request<T = unknown>(endpoint: string, options: AmuConfig = {}): AmuPromise<T | AmuRawResponse<T>> {
@@ -78,6 +91,7 @@ export class Amu {
     let finalConfig: AmuConfig = {};
     const workflowStart = Date.now();
     let totalRetries = 0;
+    let requestUrl = endpoint;
 
     const execute = async (retriesLeft: number, attempt = 0): Promise<Response> => {
       const config = {
@@ -90,6 +104,7 @@ export class Amu {
       const requestMethod = (config.method ?? 'GET').toString().toUpperCase();
 
       const url = appendQueryParams(endpoint, this.defaults.baseURL, options.params);
+      requestUrl = url;
 
       if (options.json) {
         config.body = JSON.stringify(options.json);
@@ -127,7 +142,7 @@ export class Amu {
         clearTimeout(timer);
         if (!response.ok) {
           const errorData = await this.parseResponseBody(response);
-          throw new AmuError(response.status, errorData, response.headers);
+          throw new AmuError(response.status, errorData, response.headers, response.statusText);
         }
         return response;
       } catch (err: unknown) {
@@ -183,22 +198,42 @@ export class Amu {
       }
     };
 
-    const responsePromise = execute(retryPolicy.attempts).then((response) => {
-      if (totalRetries > 0) {
-        this.safeInvoke(() =>
-          finalConfig.hooks?.onRetryComplete?.({
-            success: true,
-            totalAttempts: totalRetries + 1,
-            totalRetries,
-            totalDuration: Date.now() - workflowStart,
-            finalStatus: response.status,
-            method: ((finalConfig.method ?? 'GET').toString().toUpperCase()),
-            url: appendQueryParams(endpoint, this.defaults.baseURL, options.params),
-          })
-        );
-      }
-      return response;
-    });
+    const responsePromise = execute(retryPolicy.attempts)
+      .then((response) => {
+        const totalDuration = Date.now() - workflowStart;
+        const totalAttempts = totalRetries + 1;
+        this.logLatency(finalConfig, {
+          method: (finalConfig.method ?? 'GET').toString().toUpperCase(),
+          url: requestUrl,
+          duration: totalDuration,
+          attempts: totalAttempts,
+          status: response.status,
+        });
+        if (totalRetries > 0) {
+          this.safeInvoke(() =>
+            finalConfig.hooks?.onRetryComplete?.({
+              success: true,
+              totalAttempts,
+              totalRetries,
+              totalDuration,
+              finalStatus: response.status,
+              method: (finalConfig.method ?? 'GET').toString().toUpperCase(),
+              url: requestUrl,
+            })
+          );
+        }
+        return response;
+      })
+      .catch((error: unknown) => {
+        this.logLatency(finalConfig, {
+          method: (finalConfig.method ?? 'GET').toString().toUpperCase(),
+          url: requestUrl,
+          duration: Date.now() - workflowStart,
+          attempts: totalRetries + 1,
+          error,
+        });
+        throw error;
+      });
 
     const parsedPromise = responsePromise.then(async (res: Response) => {
       const data = await this.parseResponseBody(res, true);

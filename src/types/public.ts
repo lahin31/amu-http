@@ -39,6 +39,7 @@ export interface AmuConfig extends RequestInit {
   baseURL?: string;
   timeout?: number;
   retries?: number | AmuRetryConfig;
+  debug?: boolean;
   onLoadingChange?: (isLoading: boolean) => void;
   json?: unknown;
   params?: Record<string, string | number | boolean | null | undefined>;

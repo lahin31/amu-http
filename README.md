@@ -224,6 +224,21 @@ await promise; // throws AmuNetworkError with kind: 'abort'
 
 ---
 
+### Debug Latency
+
+Set `debug: true` to print request latency in the console.
+
+```ts
+import amu from 'amu-http';
+
+await amu.get('/users', { debug: true });
+// [amu][latency] GET /users 128ms attempts=1 status=200
+```
+
+`debug` works on both instance defaults and per-request config.
+
+---
+
 ### Timeout & Retries
 
 ```ts
