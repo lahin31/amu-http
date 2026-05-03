@@ -16,19 +16,19 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
 
 **Getting started**
 
-- [Installation](#installation)
-- [Quick Example](#quick-example)
+- [Installation](#-installation)
+- [Quick Example](#-quick-example)
 
 **Overview & comparison**
 
-- [Why Amu](#why-amu)
-- [Amu vs Axios](#amu-vs-axios)
-- [Killer Features](#killer-features)
-- [Core Features](#core-features)
+- [Why Amu](#-why-amu)
+- [Amu vs Axios](#️-amu-vs-axios)
+- [Killer Features](#-killer-features)
+- [Core Features](#-core-features)
 
 **Making requests**
 
-- [Overview](#usage)
+- [Overview](#-usage)
  - [Basic GET](#basic-get)
  - [Axios-style Raw Response](#axios-style-raw-response)
  - [POST (JSON)](#post-json)
@@ -40,27 +40,25 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
 
 **Timeouts, retries & URL safety**
 
-- [Timeout & Retries](#timeout-retries)
-- [URL Safety](#url-safety)
+- [Timeout & Retries](#timeout--retries)
+- [URL Safety](#-url-safety)
 
 **Errors & behavior**
 
-- [Error Handling](#error-handling)
-- [Network Errors](#network-errors)
+- [Error Handling](#️-error-handling)
+- [Network Errors](#-network-errors)
 - [Failure Behavior Spec](#failure-behavior-spec)
 
 **Advanced**
 
-- [Schema Validation](#schema-validation)
-- [Custom Instance](#custom-instance)
+- [Schema Validation](#-schema-validation)
+- [Custom Instance](#-custom-instance)
 
 **Reference**
 
-- [Size](#size)
-- [Design Principles](#design-principles)
-- [Development](#development)
-
----
+- [Size](#-size)
+- [Design Principles](#-design-principles)
+- [Development](#-development)
 
 ## 📦 Installation
 
