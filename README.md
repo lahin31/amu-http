@@ -1,5 +1,11 @@
 # Amu
 
+[![npm version](https://img.shields.io/npm/v/amu-http.svg?logo=npm&label=npm)](https://www.npmjs.com/package/amu-http)
+[![npm downloads](https://img.shields.io/npm/dw/amu-http?logo=npm&label=downloads)](https://www.npmjs.com/package/amu-http)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/amu-http?label=gzip)](https://bundlephobia.com/package/amu-http)
+[![types](https://img.shields.io/npm/types/amu-http)](https://www.npmjs.com/package/amu-http)
+[![license](https://img.shields.io/npm/l/amu-http)](https://github.com/lahin31/amu-http/blob/main/LICENSE)
+
 **Amu** is a Fetch-first HTTP client for modern JavaScript and TypeScript apps.
 
 It keeps native Fetch behavior while removing the boilerplate that slows teams down in real-world systems.
