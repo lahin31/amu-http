@@ -12,6 +12,54 @@ It keeps native Fetch behavior while removing the boilerplate that slows teams d
 
 Safer URL handling by default: strict URL parsing (syntax-level validation only) rejects malformed absolute URLs instead of silently normalizing them.
 
+## Table of Contents
+
+**Getting started**
+
+- [Installation](#installation)
+- [Quick Example](#quick-example)
+
+**Overview & comparison**
+
+- [Why Amu](#why-amu)
+- [Amu vs Axios](#amu-vs-axios)
+- [Killer Features](#killer-features)
+- [Core Features](#core-features)
+
+**Making requests**
+
+- [Overview](#usage)
+ - [Basic GET](#basic-get)
+ - [Axios-style Raw Response](#axios-style-raw-response)
+ - [POST (JSON)](#post-json)
+ - [PUT / PATCH / DELETE](#put-patch-delete)
+ - [Query Params](#query-params)
+ - [Headers / Auth](#headers-auth)
+ - [Request Cancellation (AbortController)](#request-cancellation-abortcontroller)
+ - [Debug Latency](#debug-latency)
+
+**Timeouts, retries & URL safety**
+
+- [Timeout & Retries](#timeout-retries)
+- [URL Safety](#url-safety)
+
+**Errors & behavior**
+
+- [Error Handling](#error-handling)
+- [Network Errors](#network-errors)
+- [Failure Behavior Spec](#failure-behavior-spec)
+
+**Advanced**
+
+- [Schema Validation](#schema-validation)
+- [Custom Instance](#custom-instance)
+
+**Reference**
+
+- [Size](#size)
+- [Design Principles](#design-principles)
+- [Development](#development)
+
 ---
 
 ## 📦 Installation
