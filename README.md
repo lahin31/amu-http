@@ -255,8 +255,11 @@ await amu.get('/me', {
   headers: {
     Authorization: `Bearer ${token}`,
   },
+  credentials: 'include', // include cookies/credentials for cross-site auth
 });
 ```
+
+> Include credentials when the request needs cookies or browser auth data.
 
 ---
 
