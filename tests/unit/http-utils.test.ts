@@ -18,6 +18,28 @@ describe('http utils', () => {
     expect(url).toBe('https://api.example.com/users?active=true&page=1');
   });
 
+  it('uses custom paramsSerializer when provided', () => {
+    const url = appendQueryParams(
+      '/users',
+      'https://api.example.com',
+      { page: 1, active: true },
+      (params) =>
+        Object.entries(params)
+          .filter(([, value]) => value != null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join('&')
+    );
+    expect(url).toBe('https://api.example.com/users?page=1&active=true');
+  });
+
+  it('overrides existing query params with params values', () => {
+    const url = appendQueryParams('/users?sort=asc&page=1', 'https://api.example.com', {
+      sort: 'desc',
+      active: true,
+    });
+    expect(url).toBe('https://api.example.com/users?sort=desc&page=1&active=true');
+  });
+
   it('normalizes retry config defaults', () => {
     expect(normalizeRetryPolicy(undefined)).toEqual({
       attempts: 0,

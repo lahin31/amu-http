@@ -244,6 +244,21 @@ await amu.get('/users?page=1', {
 // Final URL: /users?page=1&limit=10
 ```
 
+You can also provide a custom query serializer with `paramsSerializer`.
+
+```ts
+await amu.get('/users', {
+  params: { page: 1, search: 'John & Doe' },
+  paramsSerializer: (params) =>
+    Object.entries(params)
+      .filter(([, value]) => value != null)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+      .join('&'),
+});
+```
+
+> Amu's default query behavior is safer: `params` values override any duplicate keys already present in the URL.
+
 ---
 
 ### Headers / Auth

@@ -103,7 +103,12 @@ export class Amu {
       finalConfig = config;
       const requestMethod = (config.method ?? 'GET').toString().toUpperCase();
 
-      const url = appendQueryParams(endpoint, this.defaults.baseURL, options.params);
+      const url = appendQueryParams(
+        endpoint,
+        this.defaults.baseURL,
+        options.params,
+        options.paramsSerializer ?? this.defaults.paramsSerializer
+      );
       requestUrl = url;
 
       if (options.json) {

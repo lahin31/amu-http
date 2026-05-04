@@ -9,6 +9,7 @@ export interface AmuDefaults {
   headers: HeadersInit;
   retries: number | AmuRetryConfig;
   hooks: AmuHooks;
+  paramsSerializer?: AmuConfig['paramsSerializer'];
 }
 
 export function createDefaults(config: AmuConfig): AmuDefaults {
@@ -18,6 +19,7 @@ export function createDefaults(config: AmuConfig): AmuDefaults {
     headers: { 'Content-Type': 'application/json', ...config.headers },
     retries: config.retries || 0,
     hooks: config.hooks || {},
+    paramsSerializer: config.paramsSerializer,
   };
 }
 
@@ -37,24 +39,41 @@ export function getErrorName(err: unknown): string | undefined {
 export function appendQueryParams(
   endpoint: string,
   baseURL: string,
-  params?: AmuConfig['params']
+  params?: AmuConfig['params'],
+  paramsSerializer?: AmuConfig['paramsSerializer']
 ): string {
   validateProtocolSlashes(endpoint);
 
   let url = endpoint.startsWith('http') ? endpoint : `${baseURL}${endpoint}`;
   if (!params) return url;
 
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null) continue;
-    search.set(key, String(value));
+  const hashIndex = url.indexOf('#');
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : '';
+  const urlWithoutHash = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+
+  const queryIndex = urlWithoutHash.indexOf('?');
+  const base = queryIndex >= 0 ? urlWithoutHash.slice(0, queryIndex) : urlWithoutHash;
+  const existingQuery = queryIndex >= 0 ? urlWithoutHash.slice(queryIndex + 1) : '';
+
+  const query = paramsSerializer
+    ? paramsSerializer(params)
+    : (() => {
+        const search = new URLSearchParams(existingQuery);
+        for (const [key, value] of Object.entries(params)) {
+          if (value === undefined || value === null) continue;
+          search.set(key, String(value));
+        }
+        return search.toString();
+      })();
+
+  if (!query) return base + (existingQuery ? `?${existingQuery}` : '') + hash;
+
+  if (paramsSerializer) {
+    const normalizedQuery = query.startsWith('?') ? query.slice(1) : query;
+    return base + (existingQuery ? `?${existingQuery}&${normalizedQuery}` : `?${normalizedQuery}`) + hash;
   }
 
-  const query = search.toString();
-  if (query) {
-    url += (url.includes('?') ? '&' : '?') + query;
-  }
-  return url;
+  return base + `?${query}` + hash;
 }
 
 const MALFORMED_PROTOCOL_RE = /^https?:[^/]/i;

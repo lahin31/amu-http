@@ -1,3 +1,5 @@
+export type AmuParams = Record<string, string | number | boolean | null | undefined>;
+
 export type AmuSchema<T> =
   | ((input: unknown) => T | Promise<T>)
   | { parse: (input: unknown) => T | Promise<T> };
@@ -42,7 +44,8 @@ export interface AmuConfig extends RequestInit {
   debug?: boolean;
   onLoadingChange?: (isLoading: boolean) => void;
   json?: unknown;
-  params?: Record<string, string | number | boolean | null | undefined>;
+  params?: AmuParams;
+  paramsSerializer?: (params: AmuParams) => string;
   schema?: AmuSchema<unknown>;
   raw?: boolean;
   hooks?: AmuHooks;
