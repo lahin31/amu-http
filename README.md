@@ -32,6 +32,7 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
  - [Basic GET](#basic-get)
  - [HEAD](#head)
  - [Axios-style Raw Response](#axios-style-raw-response)
+ - [Response Readers](#response-readers)
  - [POST (JSON)](#post-json)
  - [PUT / PATCH / DELETE](#put--patch--delete)
  - [Query Params](#query-params)
@@ -204,6 +205,39 @@ const res = await amu.get('/user/1', {
   raw: true,
   schema: UserSchema,
 });
+```
+
+---
+
+### Response Readers
+
+Amu requests return an `AmuPromise` with built-in response reader methods. These allow you to access different response body formats without re-fetching:
+
+```ts
+import amu from 'amu-http';
+
+const promise = amu.get('/users');
+
+// All of these read from the same underlying response
+const data = await promise;                    // Parsed data (JSON or text)
+const json = await promise.json<User[]>();   // Force JSON parsing
+const text = await promise.text();             // Get response as text
+const blob = await promise.blob();             // Get response as blob
+```
+
+These reader methods are particularly useful when you need multiple response formats or want to handle parsing errors gracefully:
+
+```ts
+const promise = amu.get('/data', { debug: true });
+
+try {
+  const parsed = await promise;
+  console.log('Success:', parsed);
+} catch (error) {
+  // Fallback to reading as text
+  const raw = await promise.text();
+  console.log('Raw response:', raw);
+}
 ```
 
 ---
