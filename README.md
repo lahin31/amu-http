@@ -25,6 +25,7 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
 - [Amu vs Axios](#️-amu-vs-axios)
 - [Killer Features](#-killer-features)
 - [Core Features](#-core-features)
+- [Built-in Defaults](#️-built-in-defaults)
 
 **Making requests**
 
@@ -174,6 +175,20 @@ const userData = await amu.get('/user', { schema: UserSchema });
 - Full TypeScript support with type inference  
 - Instance-based client factory  
 - Tiny footprint for browser & server  
+
+---
+
+## ⚙️ Built-in Defaults
+
+Amu comes with sensible defaults to make your code safer without extra configuration:
+
+| Setting | Default | Override |
+|---------|---------|----------|
+| Timeout | 10 seconds (10000ms) | `{ timeout: 5000 }` |
+| Retries | 0 (no retries) | `{ retries: 2 }` or retry config |
+| Content-Type | `application/json` | `{ headers: { 'Content-Type': '...' } }` |
+| Idempotent retries | GET, HEAD only | `{ retries: { allowNonIdempotent: true } }` |
+| Default retryOn | Network errors | `{ retries: { retryOn: [500, 502, 503] } }` |
 
 ---
 
@@ -392,6 +407,8 @@ await amu.get('/users', { debug: true });
 ---
 
 ### Timeout & Retries
+
+Amu has a default timeout of **10 seconds (10000ms)** for all requests. Override it per-request or set instance defaults:
 
 ```ts
 import amu from 'amu-http';
