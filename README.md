@@ -119,6 +119,7 @@ It also has two standout capabilities:
 | Retry semantics     | HTTP-aware               | Manual               |
 | Error structure     | Typed & structured       | Less structured      |
 | URL validation      | Strict                   | Lenient              |
+| TypeScript support  | Excellent (full inference) | Good                 |
 | Bundle size         | ~1.6KB (gzip)            | ~14KB (gzip)         |
 
 ---
@@ -142,6 +143,24 @@ Amu supports validator-driven parsing at the request layer:
 
 You get runtime data-shape guarantees at the boundary where APIs enter your app.
 
+### 3) Excellent TypeScript Support
+
+Amu is built with TypeScript-first design:
+- Full generic type inference on all methods
+- Method overloads for `raw` option (returns `AmuRawResponse<T>` or `T`)
+- Typed error classes (`AmuError`, `AmuNetworkError`, `AmuUrlError`, `AmuValidationError`)
+- Complete `AmuConfig` typing with native Fetch options
+- Schema-driven type inference from Zod & custom validators
+
+```ts
+// Type inference works seamlessly
+const user = await amu.get<User>('/user/1');
+const res = await amu.get<User>('/user/1', { raw: true }); // AmuRawResponse<User>
+
+// Schema validation infers types
+const userData = await amu.get('/user', { schema: UserSchema });
+```
+
 ---
 
 ## 🧠 Core Features
@@ -151,6 +170,7 @@ You get runtime data-shape guarantees at the boundary where APIs enter your app.
 - Retry policies with full control  
 - Query params support  
 - Schema validation (Zod + custom)  
+- Full TypeScript support with type inference  
 - Instance-based client factory  
 - Tiny footprint for browser & server  
 
