@@ -266,6 +266,10 @@ export class Amu {
     return this.request<T>(url, { ...config, method: 'GET' });
   }
 
+  head<T = unknown>(url: string, config?: AmuConfig) {
+    return this.request<T>(url, { ...config, method: 'HEAD' });
+  }
+
   post<T = unknown>(url: string, data?: unknown, config?: AmuConfig) {
     return this.request<T>(url, { ...config, method: 'POST', json: data });
   }

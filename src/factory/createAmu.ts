@@ -9,7 +9,7 @@ export function createInstance(baseOrConfig?: string | AmuConfig, config: AmuCon
 }
 
 export type AmuHybrid = typeof createInstance &
-  Pick<Amu, 'request' | 'get' | 'post' | 'put' | 'patch' | 'delete'>;
+  Pick<Amu, 'request' | 'get' | 'head' | 'post' | 'put' | 'patch' | 'delete'>;
 
 export function createDefaultAmu(): AmuHybrid {
   const defaultInstance = new Amu();
@@ -17,6 +17,7 @@ export function createDefaultAmu(): AmuHybrid {
 
   amu.request = defaultInstance.request.bind(defaultInstance);
   amu.get = defaultInstance.get.bind(defaultInstance);
+  amu.head = defaultInstance.head.bind(defaultInstance);
   amu.post = defaultInstance.post.bind(defaultInstance);
   amu.put = defaultInstance.put.bind(defaultInstance);
   amu.patch = defaultInstance.patch.bind(defaultInstance);

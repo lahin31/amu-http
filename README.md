@@ -30,6 +30,7 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
 
 - [Overview](#-usage)
  - [Basic GET](#basic-get)
+ - [HEAD](#head)
  - [Axios-style Raw Response](#axios-style-raw-response)
  - [POST (JSON)](#post-json)
  - [PUT / PATCH / DELETE](#put--patch--delete)
@@ -163,6 +164,19 @@ import amu from 'amu-http';
 
 const users = await amu.get('https://jsonplaceholder.typicode.com/users');
 ```
+
+---
+
+### HEAD
+
+```ts
+import amu from 'amu-http';
+
+// Check if resource exists without downloading the body
+await amu.head('https://api.example.com/users/1');
+```
+
+HEAD requests are useful for checking resource availability or metadata without fetching the full response body. Like GET, HEAD is an idempotent method and will be retried by default if configured.
 
 ---
 
