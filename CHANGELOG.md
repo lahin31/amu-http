@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/lahin31/amu-http/compare/v1.1.3...v1.2.0) (2026-05-12)
+
+
+### Features
+
+* added paramsSerializer ([9a0212f](https://github.com/lahin31/amu-http/commit/9a0212fd6e4fb778abdbf0f467a4b04169c0ba27))
+* added pull request template ([cacb885](https://github.com/lahin31/amu-http/commit/cacb885734bd2b33ca3069320caed56af842cbba))
+
+
+### Bug Fixes
+
+* table of contents ([415a4e1](https://github.com/lahin31/amu-http/commit/415a4e16363afb3790e70f243f91ff4dcc94411e))
+
 ### [1.1.3](https://github.com/lahin31/amu-http/compare/v1.1.2...v1.1.3) (2026-04-30)
 
 
