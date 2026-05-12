@@ -35,6 +35,7 @@ Safer URL handling by default: strict URL parsing (syntax-level validation only)
  - [Response Readers](#response-readers)
  - [POST (JSON)](#post-json)
  - [PUT / PATCH / DELETE](#put--patch--delete)
+ - [OPTIONS](#options)
  - [Query Params](#query-params)
  - [Headers / Auth](#headers--auth)
  - [Request Cancellation (AbortController)](#request-cancellation-abortcontroller)
@@ -284,6 +285,19 @@ await amu.put('/users/1', { name: 'Updated Name' });
 await amu.patch('/users/1', { role: 'admin' });
 await amu.delete('/users/1');
 ```
+
+---
+
+### OPTIONS
+
+```ts
+import amu from 'amu-http';
+
+// Check available HTTP methods for a resource
+await amu.options('/api/users');
+```
+
+The OPTIONS method is useful for discovering the communication options available for a resource. It can be used to check which HTTP methods are allowed by the server.
 
 ---
 

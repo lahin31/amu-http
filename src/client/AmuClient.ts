@@ -285,4 +285,8 @@ export class Amu {
   delete<T = unknown>(url: string, config?: AmuConfig) {
     return this.request<T>(url, { ...config, method: 'DELETE' });
   }
+
+  options<T = unknown>(url: string, config?: AmuConfig) {
+    return this.request<T>(url, { ...config, method: 'OPTIONS' });
+  }
 }
